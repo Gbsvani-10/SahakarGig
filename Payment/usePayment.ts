@@ -59,13 +59,21 @@ export function usePayment() {
   
   // Easy Mode Step tracker (1 to 5)
   const [easyStep, setEasyStep] = useState<number>(1);
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(true);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(false);
   
   // Demo Mode Switch
   const [isDemoControlsOpen, setIsDemoControlsOpen] = useState<boolean>(false);
 
   const t = translations[language];
-  const { isSpeaking, hasSpeechSupport, speak, stop, currentCaption } = useSpeechSynthesis();
+  const {
+    isSpeaking,
+    hasSpeechSupport,
+    speak,
+    speakStep,
+    stop,
+    currentCaption,
+    activeVoiceLang,
+  } = useSpeechSynthesis();
 
   // Create payment request when order changes or amount updates
   const refreshPaymentRequest = useCallback(
@@ -94,30 +102,10 @@ export function usePayment() {
     refreshPaymentRequest(selectedOrder, customAmount);
   }, [selectedOrder, customAmount, refreshPaymentRequest]);
 
-  // Voice narration when Easy Mode step changes
+  // When mode changes, ensure any ongoing audio is stopped
   useEffect(() => {
-    if (mode === 'easy' && isVoiceEnabled) {
-      let voiceText = '';
-      switch (easyStep) {
-        case 1:
-          voiceText = `${t.voiceStep1} ₹${customAmount}.`;
-          break;
-        case 2:
-          voiceText = t.voiceStep2;
-          break;
-        case 3:
-          voiceText = t.voiceStep3;
-          break;
-        case 4:
-          voiceText = `${t.voiceStep4}: ${selectedOrder.workerName}, ₹${customAmount}.`;
-          break;
-        case 5:
-          voiceText = t.voiceStep5;
-          break;
-      }
-      speak(voiceText, language);
-    }
-  }, [mode, easyStep, isVoiceEnabled, language, customAmount, selectedOrder, speak, t]);
+    stop();
+  }, [mode, stop]);
 
   /**
    * Initiate UPI payment (Unified "Pay with any UPI app" or specific app)
@@ -144,7 +132,7 @@ export function usePayment() {
 
         // Play voice prompt
         if (isVoiceEnabled) {
-          speak(t.voiceStep3, language);
+          speakStep(3, language, paymentRequest.merchantName, paymentRequest.amount);
         }
 
         // Handoff to Android native intent or web protocol
@@ -215,12 +203,12 @@ export function usePayment() {
   }, []);
 
   /**
-   * Demo Simulation Triggers for SIH Judges
+   * Demo Simulation Triggers for Testing
    */
   const simulateOutcome = useCallback(
     (outcome: 'success' | 'failed' | 'cancelled' | 'unconfirmed') => {
       if (!currentTransaction) {
-        // Create quick transaction if judge clicks simulate directly
+        // Create quick transaction if tester clicks simulate directly
         if (paymentRequest) {
           const { transaction } = PaymentService.initiateTransaction(paymentRequest);
           setCurrentTransaction(transaction);
@@ -243,12 +231,15 @@ export function usePayment() {
         setPaymentStatus(outcome);
 
         if (isVoiceEnabled) {
-          if (outcome === 'success') speak(t.voiceSuccess, language);
-          if (outcome === 'failed' || outcome === 'cancelled') speak(t.voiceFailed, language);
+          if (outcome === 'success') {
+            speakStep('success', language, selectedOrder.workerName, customAmount);
+          } else if (outcome === 'failed' || outcome === 'cancelled') {
+            speakStep('failed', language, selectedOrder.workerName, customAmount);
+          }
         }
       }, 700);
     },
-    [currentTransaction, paymentRequest, isVoiceEnabled, language, speak, t]
+    [currentTransaction, paymentRequest, isVoiceEnabled, language, speakStep, selectedOrder.workerName, customAmount]
   );
 
   return {
@@ -277,7 +268,9 @@ export function usePayment() {
     isSpeaking,
     hasSpeechSupport,
     currentCaption,
+    activeVoiceLang,
     speak,
+    speakStep,
     stop,
     initiatePayment,
     handleCopyUpiId,
