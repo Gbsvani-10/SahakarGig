@@ -22,6 +22,12 @@ CREATE TABLE IF NOT EXISTS invoices (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS gateway VARCHAR(30);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS gateway_order_id VARCHAR(100);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS gateway_payment_id VARCHAR(100);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_gateway_order ON invoices(gateway_order_id) WHERE gateway_order_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_gateway_payment ON invoices(gateway_payment_id) WHERE gateway_payment_id IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS ratings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     booking_id UUID UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
