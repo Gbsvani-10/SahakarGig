@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const axios = require('axios');
 const db = require('../db');
+const emailService = require('../services/emailService');
 
 const getRazorpayConfig = () => {
     const keyId = process.env.RAZORPAY_KEY_ID;
@@ -20,7 +21,7 @@ const razorpayRequest = async (method, path, data) => {
 };
 
 const getOwnedCompletedBooking = async (bookingId, customerId) => {
-    const result = await db.query('SELECT b.*, w.name AS worker_name FROM bookings b LEFT JOIN workers w ON w.id=b.worker_id WHERE b.id=$1 AND b.customer_id=$2', [bookingId, customerId]);
+    const result = await db.query(`SELECT b.*, w.name AS worker_name, u.name AS customer_name, u.email AS customer_email FROM bookings b LEFT JOIN workers w ON w.id=b.worker_id LEFT JOIN users u ON u.id=b.customer_id WHERE b.id=$1 AND b.customer_id=$2`, [bookingId, customerId]);
     return result.rows[0] || null;
 };
 
@@ -35,13 +36,13 @@ exports.createRazorpayOrder = async (req, res) => {
 
         const existing = await db.query('SELECT * FROM invoices WHERE booking_id=$1', [bookingId]);
         if (existing.rows.length && existing.rows[0].status === 'paid') return res.status(409).json({ error: 'This booking has already been paid.', invoice: existing.rows[0] });
-        if (existing.rows.length && existing.rows[0].gateway_order_id) return res.json({ success: true, data: { keyId: getRazorpayConfig().keyId, orderId: existing.rows[0].gateway_order_id, amount: Math.round(Number(booking.amount) * 100), currency: 'INR', bookingId: String(bookingId), workerName: booking.worker_name || 'Cooperative Worker' } });
+        if (existing.rows.length && existing.rows[0].gateway_order_id) return res.json({ success: true, data: { keyId: getRazorpayConfig().keyId, orderId: existing.rows[0].gateway_order_id, amount: Math.round(Number(booking.amount) * 100), currency: 'INR', bookingId: String(bookingId), workerName: booking.worker_name || 'Cooperative Worker', customerName: booking.customer_name || '', customerEmail: booking.customer_email || '' } });
 
         const amountPaise = Math.round(Number(booking.amount) * 100);
         const order = await razorpayRequest('post', '/orders', { amount: amountPaise, currency: 'INR', receipt: `sg_${String(bookingId).replace(/-/g, '').slice(0, 30)}`, notes: { booking_id: String(bookingId), customer_id: String(req.user.id) } });
 
         await db.query(`INSERT INTO invoices (booking_id,invoice_number,amount,payment_method,status,gateway,gateway_order_id) VALUES ($1,$2,$3,'Razorpay','pending','razorpay',$4) ON CONFLICT (booking_id) DO UPDATE SET gateway='razorpay',gateway_order_id=EXCLUDED.gateway_order_id,status='pending'`, [bookingId, `INV-${Date.now()}`, Number(booking.amount), order.id]);
-        res.json({ success: true, data: { keyId: getRazorpayConfig().keyId, orderId: order.id, amount: order.amount, currency: order.currency, bookingId: String(bookingId), customerName: req.user.name || '', customerEmail: req.user.email || '', workerName: booking.worker_name || 'Cooperative Worker' } });
+        res.json({ success: true, data: { keyId: getRazorpayConfig().keyId, orderId: order.id, amount: order.amount, currency: order.currency, bookingId: String(bookingId), customerName: booking.customer_name || '', customerEmail: booking.customer_email || '', workerName: booking.worker_name || 'Cooperative Worker' } });
     } catch (err) {
         console.error('Razorpay order error:', err.response?.data || err.message);
         const status = err.statusCode || err.response?.status || 500;
@@ -80,7 +81,20 @@ exports.verifyRazorpayPayment = async (req, res) => {
         if (!invoiceRes.rows.length) return res.status(500).json({ error: 'Payment was verified but invoice record is missing.' });
         if (booking.worker_id) await db.query('UPDATE workers SET is_available=true WHERE id=$1', [booking.worker_id]);
 
-        res.json({ success: true, message: 'Real payment verified and invoice generated.', data: { paymentId: razorpay_payment_id, orderId: razorpay_order_id, invoice: invoiceRes.rows[0] } });
+        const invoice = invoiceRes.rows[0];
+        try {
+            await db.query(`INSERT INTO notifications (recipient_user_id, title, message, type, link_to) VALUES ($1,$2,$3,'payment',$4)`, [booking.customer_id, '💳 Payment Successful', `Your payment of ₹${Number(booking.amount).toFixed(2)} for ${booking.service_type} was successful. Invoice ${invoice.invoice_number}.`, '/customer/payments']);
+        } catch (notificationError) {
+            console.error('Payment notification error:', notificationError);
+        }
+
+        try {
+            await emailService.sendPaymentConfirmation({ to: booking.customer_email, customerName: booking.customer_name, amount: booking.amount, paymentId: razorpay_payment_id, orderId: razorpay_order_id, invoiceNumber: invoice.invoice_number, serviceType: booking.service_type });
+        } catch (emailError) {
+            console.error('Payment confirmation email error:', emailError);
+        }
+
+        res.json({ success: true, message: 'Real payment verified and invoice generated.', data: { paymentId: razorpay_payment_id, orderId: razorpay_order_id, invoice } });
     } catch (err) {
         console.error('Razorpay verification error:', err.response?.data || err.message);
         const status = err.statusCode || err.response?.status || 500;
