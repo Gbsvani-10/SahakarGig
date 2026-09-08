@@ -56,8 +56,6 @@ export const CustomerLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <DemoBanner />
-
       <div className="flex-1 flex overflow-hidden">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (

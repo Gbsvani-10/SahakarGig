@@ -259,7 +259,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       paymentStatus: 'Pending'
     });
 
-    addToast('warning', '🚨 SIH Demo Scenario Triggered!', 'Emergency plumbing request logged. Switch to Worker or Admin to see live dispatch!');
+    addToast('warning', '🚨 Emergency Scenario Triggered!', 'Emergency plumbing request logged. Switch to Worker or Admin to see live dispatch!');
     return;
   };
 

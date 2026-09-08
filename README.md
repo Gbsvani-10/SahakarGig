@@ -2,11 +2,6 @@
 
 ### Cooperative-Owned Digital Marketplace for Household & Community Services
 
-> **SIH 2026 — Problem Statement 26089**
-> **Ministry of Cooperation | National Council for Cooperative Training (NCCT)**
-> **Theme:** Agriculture, FoodTech & Rural Development
-> **Category:** Software
-
 ---
 
 ## 📌 Overview

@@ -8,13 +8,13 @@ export const AboutPage: React.FC = () => {
       {/* Header */}
       <div className="max-w-3xl space-y-4">
         <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-          SIH 2026 Problem Statement 26089
+          Cooperative Digital Marketplace
         </span>
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-          About SahakarGig & NCCT Vision
+          About SahakarGig Vision
         </h1>
         <p className="text-base text-gray-700 leading-relaxed">
-          National Council for Cooperative Training (NCCT), an autonomous society promoted by the Ministry of Cooperation, Government of India, is establishing the digital foundation for Labour Cooperative Societies across India.
+          SahakarGig establishes the digital foundation for Labour Cooperative Societies and Federations across India, connecting verified skilled artisans directly with households and communities.
         </p>
       </div>
 
@@ -36,7 +36,7 @@ export const AboutPage: React.FC = () => {
           </div>
           <h3 className="font-bold text-gray-900 text-base">Dignified Gig Work</h3>
           <p className="text-xs text-gray-700 leading-relaxed">
-            Eliminating the precariousness of algorithmic gig work by integrating social safety nets: accidental insurance, medical coverage under Ayushman Bharat, and children merit grants.
+            Eliminating the precariousness of algorithmic gig work by integrating social safety nets: accidental insurance, medical coverage, and children merit grants.
           </p>
         </Card>
 
@@ -44,9 +44,9 @@ export const AboutPage: React.FC = () => {
           <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
             <Award className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-gray-900 text-base">NCCT Training & Standards</h3>
+          <h3 className="font-bold text-gray-900 text-base">Vocational Standards</h3>
           <p className="text-xs text-gray-700 leading-relaxed">
-            Continuous vocational upskilling and certification via 14 Regional Institutes of Cooperative Management (RICMs) and 5 Institutes of Cooperative Management (ICMs).
+            Continuous vocational upskilling and certification via recognized cooperative training institutes and skill councils.
           </p>
         </Card>
       </div>

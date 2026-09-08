@@ -38,8 +38,8 @@ export const AdminDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-              National Cooperative Union of India / NCCT Nodal Console
+            <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Cooperative Governance Console
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 mt-1">

@@ -57,7 +57,7 @@ export const LandingPage: React.FC = () => {
             <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100/80 border border-emerald-200 text-xs font-bold text-emerald-900">
                 <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>Smart India Hackathon 2026 • Ministry of Cooperation</span>
+                <span>Cooperative-Owned Platform • Verified Skilled Artisans</span>
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-950 tracking-tight leading-[1.15]">
@@ -98,7 +98,7 @@ export const LandingPage: React.FC = () => {
               <div className="pt-4 border-t border-gray-200/80 grid grid-cols-3 gap-4 text-xs">
                 <div>
                   <p className="font-bold text-gray-900">100% Verified</p>
-                  <p className="text-gray-500">NCCT & NSDC Certified</p>
+                  <p className="text-gray-500">Government & Co-op Certified</p>
                 </div>
                 <div>
                   <p className="font-bold text-gray-900">Fair Wages</p>
@@ -155,7 +155,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                     </div>
                     <span className="text-[10px] uppercase font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded">
-                      Govt Nodal
+                      Verified Nodal
                     </span>
                   </div>
 
@@ -309,7 +309,7 @@ export const LandingPage: React.FC = () => {
               Why Choose SahakarGig Over Commercial App Aggregators?
             </h2>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Unlike private commercial platforms that take 25–35% predatory commissions from unorganized workers, SahakarGig is governed directly by Labour Cooperative Societies under the National Council for Cooperative Training (NCCT).
+              Unlike private commercial platforms that take 25–35% predatory commissions from unorganized workers, SahakarGig is governed directly by Labour Cooperative Societies & Federations.
             </p>
 
             <div className="space-y-3">
