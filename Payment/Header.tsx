@@ -3,8 +3,6 @@ import {
   ShieldCheck,
   Languages,
   Eye,
-  Volume2,
-  VolumeX,
   Smartphone,
   Sliders,
 } from 'lucide-react';
@@ -16,8 +14,8 @@ interface HeaderProps {
   onLanguageChange: (lang: Language) => void;
   mode: PaymentMode;
   onToggleMode: () => void;
-  isVoiceEnabled: boolean;
-  onToggleVoice: () => void;
+  isVoiceEnabled?: boolean;
+  onToggleVoice?: () => void;
   onOpenDemo: () => void;
   t: TranslationSchema;
 }
@@ -27,30 +25,28 @@ export const Header: React.FC<HeaderProps> = ({
   onLanguageChange,
   mode,
   onToggleMode,
-  isVoiceEnabled,
-  onToggleVoice,
   onOpenDemo,
   t,
 }) => {
   return (
     <header className="bg-emerald-900 text-white border-b border-emerald-800 shadow-md">
-      {/* Top micro bar for demo banner & judge quick launcher */}
+      {/* Top micro bar for system status & simulator launcher */}
       <div className="bg-emerald-950 px-4 py-1.5 flex items-center justify-between text-xs text-emerald-300 font-medium">
         <div className="flex items-center space-x-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-800 text-emerald-200 text-[11px] font-semibold tracking-wide">
-            SIH PROTOTYPE
+          <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-800/80 text-emerald-200 text-[11px] font-semibold tracking-wide">
+            LIVE UPI GATEWAY
           </span>
           <span className="hidden sm:inline">SahakarGig Cooperative Payment Architecture</span>
         </div>
 
         <button
-          id="btn-judge-controls"
+          id="btn-simulator-controls"
           onClick={onOpenDemo}
           className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition shadow-sm text-xs cursor-pointer"
-          title="Open SIH Judge Demo & Test Harness"
+          title="Open Payment Simulator & Test Harness"
         >
           <Sliders className="w-3.5 h-3.5" />
-          <span>Judge Test Controls</span>
+          <span>Payment Simulator</span>
         </button>
       </div>
 
@@ -77,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Global Toolbar: Language, Accessibility Mode, Voice */}
+        {/* Global Toolbar: Language & Accessibility Mode */}
         <div className="flex items-center flex-wrap gap-2">
           {/* Language Selector */}
           <div className="inline-flex items-center bg-emerald-950/70 rounded-lg p-1 border border-emerald-800">
@@ -117,26 +113,6 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Voice Guidance Toggle */}
-          <button
-            id="btn-voice-toggle"
-            onClick={onToggleVoice}
-            className={`p-2 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition ${
-              isVoiceEnabled
-                ? 'bg-emerald-800 border-emerald-600 text-emerald-200'
-                : 'bg-emerald-950/50 border-emerald-800 text-emerald-400 hover:bg-emerald-900'
-            }`}
-            title={isVoiceEnabled ? 'Voice instructions active' : 'Voice instructions muted'}
-            aria-label="Toggle Voice Guidance"
-          >
-            {isVoiceEnabled ? (
-              <Volume2 className="w-4 h-4 text-emerald-300" />
-            ) : (
-              <VolumeX className="w-4 h-4 text-emerald-500" />
-            )}
-            <span className="hidden md:inline">{isVoiceEnabled ? 'Voice On' : 'Voice Off'}</span>
-          </button>
-
           {/* Easy Payment Mode Toggle Button */}
           <button
             id="btn-toggle-easy-mode"
@@ -155,3 +131,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
