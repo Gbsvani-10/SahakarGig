@@ -1,52 +1,20 @@
 const db = require('../db');
-const axios = require('axios');
 
-// Create invoice and complete payment
 exports.completeServicePayment = async (req, res) => {
-    const { bookingId, amount, paymentMethod, transactionRef } = req.body;
-
+    const { bookingId, amount, paymentMethod = 'UPI', transactionRef = '' } = req.body || {};
+    const paymentAmount = Number(amount);
+    if (!bookingId || !Number.isFinite(paymentAmount) || paymentAmount <= 0) return res.status(400).json({ error: 'Valid bookingId and amount are required.' });
     try {
-        await db.query('BEGIN'); // Start transaction
-
-        // 1. Mark booking as completed
-        const bookingRes = await db.query(
-            `UPDATE bookings SET status = 'completed', amount = $1 WHERE id = $2 RETURNING *`,
-            [amount, bookingId]
-        );
-
-        if (bookingRes.rows.length === 0) {
-            await db.query('ROLLBACK');
-            return res.status(404).json({ error: 'Booking not found' });
-        }
-
+        const bookingRes = await db.query('SELECT * FROM bookings WHERE id=$1 AND customer_id=$2', [bookingId, req.user.id]);
+        if (!bookingRes.rows.length) return res.status(404).json({ error: 'Booking not found.' });
         const booking = bookingRes.rows[0];
+        if (booking.status !== 'completed') return res.status(400).json({ error: 'Service must be completed before payment.' });
+        if (booking.amount != null && Math.abs(Number(booking.amount) - paymentAmount) > 0.01) return res.status(400).json({ error: 'Payment amount does not match the booking amount.' });
 
-        // 2. Free up the worker
-        if (booking.worker_id) {
-            await db.query('UPDATE workers SET is_available = TRUE WHERE id = $1', [booking.worker_id]);
-        }
-
-        // 3. Generate Digital Invoice Record
+        await db.query('UPDATE bookings SET amount=$1 WHERE id=$2', [paymentAmount, bookingId]);
+        if (booking.worker_id) await db.query('UPDATE workers SET is_available=true WHERE id=$1', [booking.worker_id]);
         const invoiceNum = `INV-${Date.now()}`;
-        const invoiceQuery = `
-            INSERT INTO invoices (booking_id, invoice_number, amount, payment_method, transaction_ref, status)
-            VALUES ($1, $2, $3, $4, $5, 'paid')
-            RETURNING *;
-        `;
-        const invoiceRes = await db.query(invoiceQuery, [
-            bookingId, invoiceNum, amount, paymentMethod, transactionRef
-        ]);
-
-        await db.query('COMMIT');
-
-        res.status(200).json({
-            message: 'Payment verified and invoice generated',
-            invoice: invoiceRes.rows[0]
-        });
-
-    } catch (err) {
-        await db.query('ROLLBACK');
-        console.error(err);
-        res.status(500).json({ error: 'Failed to process service completion' });
-    }
+        const invoiceRes = await db.query(`INSERT INTO invoices (booking_id,invoice_number,amount,payment_method,transaction_ref,status) VALUES ($1,$2,$3,$4,$5,'paid') ON CONFLICT (booking_id) DO UPDATE SET amount=EXCLUDED.amount,payment_method=EXCLUDED.payment_method,transaction_ref=EXCLUDED.transaction_ref,status='paid' RETURNING *`, [bookingId, invoiceNum, paymentAmount, paymentMethod, transactionRef]);
+        res.json({ message:'Payment recorded and invoice generated.', invoice:invoiceRes.rows[0] });
+    } catch (err) { console.error('Payment Error:',err); res.status(500).json({error:'Failed to process service payment.'}); }
 };

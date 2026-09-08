@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { authService } from '../services/authService';
-import { MOCK_USERS } from '../data/mockData';
 
 interface AuthContextType {
   user: User | null;
@@ -21,73 +20,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('sahakar_auth_token'));
   const [role, setRole] = useState<UserRole>('guest');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
+    const restore = async () => {
       const savedToken = localStorage.getItem('sahakar_auth_token');
-      const savedRole = (localStorage.getItem('sahakar_user_role') as UserRole) || null;
-
-      if (savedToken && savedRole && MOCK_USERS[savedRole]) {
-        setUser(MOCK_USERS[savedRole]);
-        setRole(savedRole);
+      if (!savedToken) {
+        setIsLoading(false);
+        return;
+      }
+      const restoredUser = await authService.getCurrentUser(savedToken);
+      if (restoredUser) {
+        setUser(restoredUser);
+        setRole(restoredUser.role);
         setToken(savedToken);
       } else {
-        // Default to demo customer for immediate interactive experience if none set
-        const defaultUser = MOCK_USERS.customer;
-        setUser(defaultUser);
-        setRole('customer');
-        const demoToken = 'jwt-demo-customer-initial';
-        setToken(demoToken);
-        localStorage.setItem('sahakar_auth_token', demoToken);
-        localStorage.setItem('sahakar_user_role', 'customer');
+        localStorage.removeItem('sahakar_auth_token');
+        localStorage.removeItem('sahakar_user_role');
+        setToken(null);
       }
       setIsLoading(false);
     };
-
-    initAuth();
+    restore();
   }, []);
+
+  const persist = (res: { user: User; token: string }) => {
+    setUser(res.user);
+    setRole(res.user.role);
+    setToken(res.token);
+    localStorage.setItem('sahakar_auth_token', res.token);
+    localStorage.setItem('sahakar_user_role', res.user.role);
+  };
 
   const login = async (identifier: string, pass: string, requestedRole?: UserRole) => {
     setIsLoading(true);
-    try {
-      const res = await authService.login(identifier, pass, requestedRole);
-      setUser(res.user);
-      setRole(res.user.role);
-      setToken(res.token);
-      localStorage.setItem('sahakar_auth_token', res.token);
-      localStorage.setItem('sahakar_user_role', res.user.role);
-    } finally {
-      setIsLoading(false);
-    }
+    try { persist(await authService.login(identifier, pass, requestedRole)); }
+    finally { setIsLoading(false); }
   };
 
   const loginAs = async (targetRole: UserRole) => {
     setIsLoading(true);
-    try {
-      const res = await authService.loginAs(targetRole);
-      setUser(res.user);
-      setRole(res.user.role);
-      setToken(res.token);
-      localStorage.setItem('sahakar_auth_token', res.token);
-      localStorage.setItem('sahakar_user_role', res.user.role);
-    } finally {
-      setIsLoading(false);
-    }
+    try { persist(await authService.loginAs(targetRole)); }
+    finally { setIsLoading(false); }
   };
 
   const register = async (userData: Partial<User> & { password?: string }) => {
     setIsLoading(true);
-    try {
-      const res = await authService.register(userData);
-      setUser(res.user);
-      setRole(res.user.role);
-      setToken(res.token);
-      localStorage.setItem('sahakar_auth_token', res.token);
-      localStorage.setItem('sahakar_user_role', res.user.role);
-    } finally {
-      setIsLoading(false);
-    }
+    try { persist(await authService.register(userData)); }
+    finally { setIsLoading(false); }
   };
 
   const logout = () => {
@@ -99,19 +79,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        role,
-        token,
-        isAuthenticated: !!user && role !== 'guest',
-        isLoading,
-        login,
-        loginAs,
-        register,
-        logout
-      }}
-    >
+    <AuthContext.Provider value={{
+      user, role, token, isAuthenticated: !!user && role !== 'guest', isLoading,
+      login, loginAs, register, logout
+    }}>
       {children}
     </AuthContext.Provider>
   );

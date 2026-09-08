@@ -1,121 +1,85 @@
 import { User, UserRole } from '../types';
 import { MOCK_USERS } from '../data/mockData';
-import { simulatedLatency } from './apiClient';
 
 export interface AuthResponse {
   user: User;
   token: string;
 }
 
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+
+function mapUser(data: any, identifier: string): User {
+  const backendRole = data?.role;
+  const role = (backendRole === 'coop_admin' ? 'admin' : backendRole) as UserRole;
+  const fallback = MOCK_USERS[role] || MOCK_USERS.customer;
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email || identifier,
+    phone: data.phone || fallback.phone,
+    role,
+    avatarUrl: fallback.avatarUrl,
+    city: fallback.city,
+    state: fallback.state,
+    joinedDate: new Date().toISOString().split('T')[0]
+  };
+}
+
 export const authService = {
-  async login(identifier: string, pass: string, requestedRole?: UserRole): Promise<AuthResponse> {
-    // 1. Try real backend API authentication
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: identifier, password: pass })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const role = (data.user.role === 'coop_admin' ? 'admin' : data.user.role) as UserRole;
-        const mockFallback = MOCK_USERS[role] || MOCK_USERS.customer;
-        const user: User = {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email || identifier,
-          phone: data.user.phone || mockFallback.phone,
-          role: role,
-          avatarUrl: mockFallback.avatarUrl,
-          city: mockFallback.city,
-          state: mockFallback.state,
-          joinedDate: new Date().toISOString().split('T')[0]
-        };
-        return { user, token: data.token };
-      }
-    } catch (err) {
-      console.warn('[authService] Live /api/auth/login call fell back to local demo auth:', err);
+  async login(identifier: string, pass: string, _requestedRole?: UserRole): Promise<AuthResponse> {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: identifier.trim(), password: pass })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.token || !data.user) {
+      throw new Error(data.error || `Login failed (${res.status})`);
     }
-
-    // 2. Fallback to demo role or quick-switch
-    let user: User;
-    if (requestedRole && MOCK_USERS[requestedRole]) {
-      user = MOCK_USERS[requestedRole];
-    } else if (identifier.includes('worker') || identifier.includes('ravi')) {
-      user = MOCK_USERS.worker;
-    } else if (identifier.includes('admin') || identifier.includes('gov')) {
-      user = MOCK_USERS.admin;
-    } else {
-      user = MOCK_USERS.customer;
-    }
-
-    const token = `jwt-demo-${user.role}-${Date.now()}`;
-    return simulatedLatency({ user, token }, 200);
+    return { user: mapUser(data.user, identifier), token: data.token };
   },
 
   async loginAs(role: UserRole): Promise<AuthResponse> {
-    const user = MOCK_USERS[role] || MOCK_USERS.customer;
-    const token = `jwt-demo-${user.role}-${Date.now()}`;
-    return simulatedLatency({ user, token }, 100);
+    const demoCredentials: Record<string, { email: string; password: string }> = {
+      customer: { email: 'demo.customer@sahakargig.local', password: 'Demo@123' },
+      worker: { email: 'ravi.worker@sahakargig.local', password: 'Demo@123' },
+      admin: { email: 'demo.admin@sahakargig.local', password: 'Demo@123' }
+    };
+    const credentials = demoCredentials[role] || demoCredentials.customer;
+    return this.login(credentials.email, credentials.password, role);
   },
 
   async register(userData: Partial<User> & { password?: string }): Promise<AuthResponse> {
-    // 1. Try real backend API registration
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: userData.name || 'New Sahakar Member',
-          email: userData.email,
-          password: userData.password || 'demo1234',
-          phone: userData.phone || '+91 98000 00000',
-          role: userData.role === 'admin' ? 'coop_admin' : (userData.role || 'customer')
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const role = (data.user.role === 'coop_admin' ? 'admin' : data.user.role) as UserRole;
-        const mockFallback = MOCK_USERS[role] || MOCK_USERS.customer;
-        const user: User = {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          phone: userData.phone || mockFallback.phone,
-          role: role,
-          avatarUrl: mockFallback.avatarUrl,
-          city: userData.city || mockFallback.city,
-          state: userData.state || mockFallback.state,
-          joinedDate: new Date().toISOString().split('T')[0]
-        };
-        const token = `jwt-demo-${role}-${Date.now()}`;
-        return { user, token };
-      }
-    } catch (err) {
-      console.warn('[authService] Live /api/auth/register fell back to local store:', err);
+    const requestedRole = userData.role === 'admin' ? 'coop_admin' : (userData.role || 'customer');
+    if (requestedRole === 'worker') {
+      throw new Error('Worker self-registration requires cooperative onboarding. Please use a worker onboarding flow.');
     }
-
-    // 2. Fallback
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      name: userData.name || 'New Sahakar Member',
-      email: userData.email || 'user@example.com',
-      phone: userData.phone || '+91 98000 00000',
-      role: userData.role || 'customer',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      city: userData.city || 'New Delhi',
-      state: userData.state || 'Delhi',
-      joinedDate: new Date().toISOString().split('T')[0]
-    };
-
-    const token = `jwt-demo-${newUser.role}-${Date.now()}`;
-    return simulatedLatency({ user: newUser, token }, 250);
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: userData.name || 'New Sahakar Member',
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone,
+        role: requestedRole
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.user) throw new Error(data.error || `Registration failed (${res.status})`);
+    return this.login(String(userData.email), String(userData.password), userData.role);
   },
 
   async getCurrentUser(token: string): Promise<User | null> {
     if (!token) return null;
-    if (token.includes('worker')) return simulatedLatency(MOCK_USERS.worker, 100);
-    if (token.includes('admin')) return simulatedLatency(MOCK_USERS.admin, 100);
-    return simulatedLatency(MOCK_USERS.customer, 100);
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    try {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (!payload?.id || !payload?.role) return null;
+      return mapUser(payload, payload.email || '');
+    } catch {
+      return null;
+    }
   }
 };

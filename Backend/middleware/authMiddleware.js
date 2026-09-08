@@ -1,42 +1,24 @@
 const jwt = require('jsonwebtoken');
 
-// Verify JWT Token
 exports.verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer <TOKEN>
-
-    if (!token) {
-        return res.status(401).json({ error: 'Access denied. No token provided.' });
+    const authHeader = req.headers.authorization || '';
+    const [scheme, token] = authHeader.split(' ');
+    if (scheme !== 'Bearer' || !token) {
+        return res.status(401).json({ error: 'Access denied. A Bearer token is required.' });
     }
-
-    // Support instant demo tokens for smooth zero-friction evaluation
-    if (token.startsWith('jwt-demo-')) {
-        const role = token.includes('admin') ? 'coop_admin' : token.includes('worker') ? 'worker' : 'customer';
-        req.user = { 
-            id: role === 'coop_admin' ? 'admin-001' : role === 'worker' ? 'user-w1' : 'cust-101', 
-            role, 
-            email: `${role}@sahakargig.local` 
-        };
-        return next();
-    }
-
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-        req.user = decoded; // Contains id, email, role
+        const secret = process.env.JWT_SECRET;
+        if (!secret) return res.status(500).json({ error: 'JWT_SECRET is not configured on the server.' });
+        req.user = jwt.verify(token, secret);
         next();
     } catch (err) {
-        res.status(403).json({ error: 'Invalid or expired token.' });
+        return res.status(403).json({ error: 'Invalid or expired token.' });
     }
 };
 
-// Enforce Role Access Control
-exports.authorizeRoles = (...allowedRoles) => {
-    return (req, res, next) => {
-        if (!req.user || !allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({ 
-                error: `Access denied. Requires one of the following roles: ${allowedRoles.join(', ')}` 
-            });
-        }
-        next();
-    };
+exports.authorizeRoles = (...allowedRoles) => (req, res, next) => {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ error: `Access denied. Requires: ${allowedRoles.join(', ')}` });
+    }
+    next();
 };

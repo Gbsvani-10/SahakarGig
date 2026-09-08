@@ -1,94 +1,52 @@
+require('dotenv').config();
+
 const express = require('express');
-const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const server = http.createServer(app);
+const PORT = Number(process.env.PORT || 3000);
 
-// Enable CORS and JSON parsing
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// Mount the comprehensive Backend API Router
 const apiRouter = require('./Backend/routes/api');
 app.use('/api', apiRouter);
 
-// HTTP Server and Socket.IO for Live Worker Tracking
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: '*' }
-});
-
-io.on('connection', (socket) => {
-  // Workers join their skill-specific room
-  socket.on('join_skill_room', (skill) => {
-    socket.join(`room_${skill}`);
+const io = new Server(server, { cors: { origin: true, credentials: true } });
+io.on('connection', socket => {
+  socket.on('join_booking_room', bookingId => {
+    if (bookingId) socket.join(`booking_${bookingId}`);
   });
-
-  // Handle worker location tracking updates
-  socket.on('update_location', (data) => {
-    io.to(`booking_${data.bookingId}`).emit('worker_location_changed', {
-      latitude: data.latitude,
-      longitude: data.longitude
-    });
+  socket.on('join_skill_room', skill => {
+    if (skill) socket.join(`room_${skill}`);
+  });
+  socket.on('update_location', data => {
+    const lat = Number(data?.latitude), lng = Number(data?.longitude), bookingId = data?.bookingId;
+    if (!bookingId || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    io.to(`booking_${bookingId}`).emit('worker_location_changed', { latitude: lat, longitude: lng });
   });
 });
-
 app.set('io', io);
 
-const { execSync } = require('child_process');
-
-// Locate and serve Frontend Static Build
-const possibleDistPaths = [
-  path.join(__dirname, 'Frontend', 'dist'),
-  path.join(__dirname, 'dist'),
-  path.join(process.cwd(), 'Frontend', 'dist'),
-  path.join(process.cwd(), 'dist')
-];
-
-let distPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
-
-// Auto-trigger build if Frontend/dist is missing on deployment host
-if (!distPath) {
-  console.log('[Server] Frontend build not found on startup. Triggering build automatically...');
-  try {
-    const frontendDir = fs.existsSync(path.join(__dirname, 'Frontend'))
-      ? path.join(__dirname, 'Frontend')
-      : path.join(process.cwd(), 'Frontend');
-    execSync('npm run build', { cwd: frontendDir, stdio: 'inherit' });
-    distPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
-  } catch (err) {
-    console.error('[Server] On-demand frontend build error:', err.message);
-  }
+const distPath = path.join(__dirname, 'Frontend', 'dist');
+if (!fs.existsSync(path.join(distPath, 'index.html'))) {
+  console.error('Frontend build missing. Run: npm run build');
+  process.exitCode = 1;
+} else {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API endpoint not found' });
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
 }
 
-distPath = distPath || possibleDistPaths[0];
-
-app.use(express.static(distPath));
-
-// Fallback for Single Page Application (SPA) routing
-app.get('*', (req, res) => {
-  const indexPath = path.join(distPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send("SahakarGig frontend build not found. Please run 'npm run build' first.");
-  }
-});
-
-// Start listening if executed directly
 if (require.main === module) {
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`=========================================`);
-    console.log(`🤝 SahakarGig Full-Stack Platform Active`);
-    console.log(`📡 Server running on: http://0.0.0.0:${PORT}`);
-    console.log(`🔌 API endpoints available at: /api/*`);
-    console.log(`💻 Serving frontend from: ${distPath}`);
-    console.log(`=========================================`);
-  });
+  server.listen(PORT, '0.0.0.0', () => console.log(`SahakarGig running on port ${PORT}`));
 }
 
 module.exports = app;
