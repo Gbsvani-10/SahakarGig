@@ -1,71 +1,39 @@
-import { 
-  Complaint, 
-  WelfareScheme, 
-  WelfareClaim, 
-  DemandForecastItem, 
-  CooperativeInfo 
-} from '../types';
-import { 
-  MOCK_COMPLAINTS, 
-  MOCK_WELFARE_SCHEMES, 
-  MOCK_WELFARE_CLAIMS, 
-  MOCK_DEMAND_FORECAST,
-  MOCK_COOPERATIVES 
-} from '../data/mockData';
-import { simulatedLatency } from './apiClient';
-
-let complaintsStore: Complaint[] = [...MOCK_COMPLAINTS];
-let welfareClaimsStore: WelfareClaim[] = [...MOCK_WELFARE_CLAIMS];
+import { Complaint, WelfareScheme, WelfareClaim, DemandForecastItem, CooperativeInfo } from '../types';
+import { apiRequest } from './apiClient';
 
 export const adminService = {
   async getCooperatives(): Promise<CooperativeInfo[]> {
-    return simulatedLatency(MOCK_COOPERATIVES, 200);
+    const response = await apiRequest<CooperativeInfo[]>('/cooperatives');
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getWelfareSchemes(): Promise<WelfareScheme[]> {
-    return simulatedLatency(MOCK_WELFARE_SCHEMES, 150);
+    const response = await apiRequest<WelfareScheme[]>('/welfare/schemes');
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getWelfareClaims(): Promise<WelfareClaim[]> {
-    return simulatedLatency([...welfareClaimsStore], 200);
+    const response = await apiRequest<WelfareClaim[]>('/welfare/claims');
+    return Array.isArray(response.data) ? response.data : [];
   },
 
-  async updateWelfareClaimStatus(
-    claimId: string, 
-    status: WelfareClaim['status'], 
-    remarks?: string
-  ): Promise<WelfareClaim> {
-    const index = welfareClaimsStore.findIndex((c) => c.id === claimId);
-    if (index === -1) throw new Error('Claim not found');
-    welfareClaimsStore[index] = {
-      ...welfareClaimsStore[index],
-      status,
-      remarks: remarks || welfareClaimsStore[index].remarks,
-      approvalDate: status === 'Approved' || status === 'Disbursed' ? new Date().toISOString().split('T')[0] : undefined
-    };
-    return simulatedLatency(welfareClaimsStore[index], 200);
+  async updateWelfareClaimStatus(claimId:string,status:WelfareClaim['status'],remarks?:string):Promise<WelfareClaim>{
+    const response=await apiRequest<WelfareClaim>(`/welfare/claims/${encodeURIComponent(claimId)}/status`,{method:'PATCH',body:JSON.stringify({status,remarks})});
+    return response.data;
   },
 
-  async getComplaints(): Promise<Complaint[]> {
-    return simulatedLatency([...complaintsStore], 200);
+  async getComplaints():Promise<Complaint[]>{
+    const response=await apiRequest<Complaint[]>('/complaints');
+    return Array.isArray(response.data)?response.data:[];
   },
 
-  async updateComplaintStatus(
-    complaintId: string, 
-    status: Complaint['status'], 
-    resolutionNotes?: string
-  ): Promise<Complaint> {
-    const index = complaintsStore.findIndex((c) => c.id === complaintId);
-    if (index === -1) throw new Error('Complaint not found');
-    complaintsStore[index] = {
-      ...complaintsStore[index],
-      status,
-      resolutionNotes: resolutionNotes || complaintsStore[index].resolutionNotes
-    };
-    return simulatedLatency(complaintsStore[index], 200);
+  async updateComplaintStatus(complaintId:string,status:Complaint['status'],resolutionNotes?:string):Promise<Complaint>{
+    const response=await apiRequest<Complaint>(`/complaints/${encodeURIComponent(complaintId)}/status`,{method:'PATCH',body:JSON.stringify({status,resolutionNotes})});
+    return response.data;
   },
 
-  async getDemandForecast(): Promise<DemandForecastItem[]> {
-    return simulatedLatency(MOCK_DEMAND_FORECAST, 250);
+  async getDemandForecast():Promise<DemandForecastItem[]>{
+    const response=await apiRequest<DemandForecastItem[]>('/admin/ai/demand-forecast',{method:'POST'});
+    return Array.isArray(response.data)?response.data:[];
   }
 };
