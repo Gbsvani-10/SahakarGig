@@ -22,6 +22,28 @@ CREATE TABLE IF NOT EXISTS invoices (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS gateway VARCHAR(30);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS gateway_order_id VARCHAR(100);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS gateway_payment_id VARCHAR(100);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_gateway_order ON invoices(gateway_order_id) WHERE gateway_order_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_gateway_payment ON invoices(gateway_payment_id) WHERE gateway_payment_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    recipient_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    recipient_role VARCHAR(20) CHECK (recipient_role IN ('customer', 'worker', 'coop_admin')),
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(20) CHECK (type IN ('booking', 'payment', 'emergency', 'verification', 'welfare', 'system')) NOT NULL,
+    link_to VARCHAR(255),
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CHECK (recipient_user_id IS NOT NULL OR recipient_role IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(recipient_user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_role_created ON notifications(recipient_role, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS ratings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     booking_id UUID UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,

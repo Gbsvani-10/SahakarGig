@@ -1,36 +1,32 @@
 import { NotificationItem, UserRole } from '../types';
-import { MOCK_NOTIFICATIONS } from '../data/mockData';
-import { simulatedLatency } from './apiClient';
-
-let notificationsStore: NotificationItem[] = [...MOCK_NOTIFICATIONS];
+import { apiRequest } from './apiClient';
 
 export const notificationService = {
-  async getNotifications(role?: UserRole): Promise<NotificationItem[]> {
-    if (!role) return simulatedLatency([...notificationsStore], 150);
-    const filtered = notificationsStore.filter((n) => n.recipientRole === role);
-    return simulatedLatency(filtered, 150);
+  async getNotifications(_role?: UserRole): Promise<NotificationItem[]> {
+    const response = await apiRequest<NotificationItem[]>('/notifications');
+    return response.data || [];
   },
 
   async markAsRead(id: string): Promise<void> {
-    notificationsStore = notificationsStore.map((n) => 
-      n.id === id ? { ...n, isRead: true } : n
-    );
+    await apiRequest(`/notifications/${encodeURIComponent(id)}/read`, { method: 'PATCH' });
   },
 
-  async markAllAsRead(role: UserRole): Promise<void> {
-    notificationsStore = notificationsStore.map((n) => 
-      n.recipientRole === role ? { ...n, isRead: true } : n
-    );
+  async markAllAsRead(_role?: UserRole): Promise<void> {
+    await apiRequest('/notifications/read-all', { method: 'PATCH' });
   },
 
   async addNotification(notification: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'>): Promise<NotificationItem> {
-    const newNotif: NotificationItem = {
-      ...notification,
-      id: `notif-${Date.now()}`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isRead: false
-    };
-    notificationsStore = [newNotif, ...notificationsStore];
-    return simulatedLatency(newNotif, 100);
+    const response = await apiRequest<NotificationItem>('/notifications', {
+      method: 'POST',
+      body: JSON.stringify({
+        recipientUserId: (notification as any).recipientUserId,
+        recipientRole: notification.recipientRole,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        linkTo: notification.linkTo
+      })
+    });
+    return response.data;
   }
 };
