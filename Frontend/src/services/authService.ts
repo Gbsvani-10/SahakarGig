@@ -1,5 +1,4 @@
 import { User, UserRole } from '../types';
-import { MOCK_USERS } from '../data/mockData';
 
 export interface AuthResponse {
   user: User;
@@ -11,17 +10,21 @@ const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 function mapUser(data: any, identifier: string): User {
   const backendRole = data?.role;
   const role = (backendRole === 'coop_admin' ? 'admin' : backendRole) as UserRole;
-  const fallback = MOCK_USERS[role] || MOCK_USERS.customer;
+  if (!data?.id || !data?.name || !role) throw new Error('Invalid user data returned by server');
   return {
     id: data.id,
     name: data.name,
     email: data.email || identifier,
-    phone: data.phone || fallback.phone,
+    phone: data.phone || '',
     role,
-    avatarUrl: fallback.avatarUrl,
-    city: fallback.city,
-    state: fallback.state,
-    joinedDate: new Date().toISOString().split('T')[0]
+    avatarUrl: data.avatar_url || data.avatarUrl,
+    cooperativeId: data.cooperative_id,
+    cooperativeName: data.cooperative_name,
+    address: data.address,
+    city: data.city,
+    state: data.state,
+    pincode: data.pincode,
+    joinedDate: data.created_at ? new Date(data.created_at).toISOString().split('T')[0] : undefined
   };
 }
 
@@ -39,18 +42,12 @@ export const authService = {
     return { user: mapUser(data.user, identifier), token: data.token };
   },
 
-  async loginAs(role: UserRole): Promise<AuthResponse> {
-    const demoCredentials: Record<string, { email: string; password: string }> = {
-      customer: { email: 'demo.customer@sahakargig.local', password: 'Demo@123' },
-      worker: { email: 'ravi.worker@sahakargig.local', password: 'Demo@123' },
-      admin: { email: 'demo.admin@sahakargig.local', password: 'Demo@123' }
-    };
-    const credentials = demoCredentials[role] || demoCredentials.customer;
-    return this.login(credentials.email, credentials.password, role);
+  async loginAs(_role: UserRole): Promise<AuthResponse> {
+    throw new Error('Demo login is disabled. Please sign in with a registered SahakarGig account.');
   },
 
   async register(userData: Partial<User> & { password?: string }): Promise<AuthResponse> {
-    const requestedRole = userData.role === 'admin' ? 'coop_admin' : (userData.role || 'customer');
+    const requestedRole = userData.role === 'worker' ? 'worker' : 'customer';
     if (requestedRole === 'worker') {
       throw new Error('Worker self-registration requires cooperative onboarding. Please use a worker onboarding flow.');
     }
@@ -58,7 +55,7 @@ export const authService = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: userData.name || 'New Sahakar Member',
+        name: userData.name,
         email: userData.email,
         password: userData.password,
         phone: userData.phone,
@@ -67,7 +64,7 @@ export const authService = {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.user) throw new Error(data.error || `Registration failed (${res.status})`);
-    return this.login(String(userData.email), String(userData.password), userData.role);
+    return this.login(String(userData.email), String(userData.password), requestedRole);
   },
 
   async getCurrentUser(token: string): Promise<User | null> {
