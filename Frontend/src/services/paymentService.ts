@@ -1,56 +1,24 @@
 import { Transaction, Review } from '../types';
 import { MOCK_TRANSACTIONS, MOCK_REVIEWS } from '../data/mockData';
-import { simulatedLatency } from './apiClient';
+import { apiRequest } from './apiClient';
 
 let transactionsStore: Transaction[] = [...MOCK_TRANSACTIONS];
 let reviewsStore: Review[] = [...MOCK_REVIEWS];
 
 export const paymentService = {
   async getTransactions(): Promise<Transaction[]> {
-    return simulatedLatency([...transactionsStore], 200);
+    try { const response = await apiRequest<any[]>('/payments/transactions'); if (Array.isArray(response.data)) return response.data; }
+    catch (e) { console.warn('[paymentService] transaction API unavailable:', e); }
+    return [...transactionsStore];
   },
-
-  async processPayment(
-    bookingId: string, 
-    amount: number, 
-    paymentMethod: string,
-    customerName: string,
-    workerName: string,
-    serviceCategory: any
-  ): Promise<{ transactionId: string; invoiceId: string }> {
-    const txnId = `TXN-SGIG-2026-${Math.floor(10000 + Math.random() * 90000)}`;
-    const invoiceId = `INV-2026-${bookingId.split('-')[2] || Math.floor(1000 + Math.random() * 9000)}`;
-
-    const newTxn: Transaction = {
-      id: txnId,
-      bookingId,
-      amount,
-      workerPayout: Math.round(amount * 0.9), // 90% direct to worker
-      cooperativeFee: Math.round(amount * 0.07), // 7% to labour cooperative welfare
-      platformFee: Math.round(amount * 0.03), // 3% technology maintenance
-      customerName,
-      workerName,
-      serviceCategory,
-      date: new Date().toISOString().split('T')[0],
-      status: 'Successful',
-      paymentMethod
-    };
-
-    transactionsStore = [newTxn, ...transactionsStore];
-    return simulatedLatency({ transactionId: txnId, invoiceId }, 400);
+  async processPayment(bookingId:string, amount:number, paymentMethod:string, customerName:string, workerName:string, serviceCategory:any):Promise<{transactionId:string;invoiceId:string}> {
+    const response = await apiRequest<any>('/bookings/complete-payment',{method:'POST',body:JSON.stringify({bookingId,amount,paymentMethod,transactionRef:`DEMO-${Date.now()}`})});
+    const invoice=response.data?.invoice||response.invoice;
+    const transactionId=invoice?.transaction_ref||`TXN-${Date.now()}`;
+    const invoiceId=invoice?.invoice_number||invoice?.id||`INV-${Date.now()}`;
+    transactionsStore=[{id:transactionId,bookingId,amount,workerPayout:Math.round(amount*.9),cooperativeFee:Math.round(amount*.07),platformFee:Math.round(amount*.03),customerName,workerName,serviceCategory,date:new Date().toISOString().split('T')[0],status:'Successful',paymentMethod},...transactionsStore];
+    return {transactionId,invoiceId};
   },
-
-  async getReviews(): Promise<Review[]> {
-    return simulatedLatency([...reviewsStore], 200);
-  },
-
-  async addReview(review: Omit<Review, 'id' | 'date'>): Promise<Review> {
-    const newRev: Review = {
-      ...review,
-      id: `rev-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0]
-    };
-    reviewsStore = [newRev, ...reviewsStore];
-    return simulatedLatency(newRev, 250);
-  }
+  async getReviews():Promise<Review[]> { return [...reviewsStore]; },
+  async addReview(review:Omit<Review,'id'|'date'>):Promise<Review> { const newRev={...review,id:`rev-${Date.now()}`,date:new Date().toISOString().split('T')[0]};reviewsStore=[newRev,...reviewsStore];return newRev; }
 };
