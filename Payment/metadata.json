@@ -1,6 +1,0 @@
-{
-"name": "SahakarGig - UPI Payment Module",
-  "description": "Secure, accessible, multilingual UPI payment module prototype with voice guidance and Android intent integration for SahakarGig.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
