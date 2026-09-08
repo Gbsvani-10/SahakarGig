@@ -44,21 +44,40 @@ const possibleDistPaths = [
   path.join(__dirname, 'Frontend', 'dist'),
   path.join(__dirname, 'dist'),
   path.join(process.cwd(), 'Frontend', 'dist'),
-  path.join(process.cwd(), 'dist')
+  path.join(process.cwd(), 'dist'),
+  path.resolve(__dirname),
+  path.resolve(process.cwd())
 ];
 
-const distPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html'))) || possibleDistPaths[0];
+let distPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
 
+// Auto-compile if build was skipped by deployment platform
+if (!distPath) {
+  console.log('[Server] Frontend build not found on disk. Running automatic build...');
+  try {
+    const { execSync } = require('child_process');
+    execSync('npm --prefix Frontend run build', { stdio: 'inherit' });
+    distPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
+    console.log('[Server] Build finished successfully!');
+  } catch (err) {
+    console.error('[Server] Automatic build attempt failed:', err.message);
+  }
+}
+
+distPath = distPath || possibleDistPaths[0];
 app.use(express.static(distPath));
 
 // Fallback for Single Page Application (SPA) routing
 app.get('*', (req, res) => {
   const indexPath = path.join(distPath, 'index.html');
   if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send("SahakarGig frontend build not found. Please run 'npm run build' first.");
+    return res.sendFile(indexPath);
   }
+  const foundPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
+  if (foundPath) {
+    return res.sendFile(path.join(foundPath, 'index.html'));
+  }
+  res.status(404).send("SahakarGig frontend build not found. Please run 'npm run build' first.");
 });
 
 // Start listening if executed directly
