@@ -39,45 +39,44 @@ io.on('connection', (socket) => {
 
 app.set('io', io);
 
+const { execSync } = require('child_process');
+
 // Locate and serve Frontend Static Build
 const possibleDistPaths = [
   path.join(__dirname, 'Frontend', 'dist'),
   path.join(__dirname, 'dist'),
   path.join(process.cwd(), 'Frontend', 'dist'),
-  path.join(process.cwd(), 'dist'),
-  path.resolve(__dirname),
-  path.resolve(process.cwd())
+  path.join(process.cwd(), 'dist')
 ];
 
 let distPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
 
-// Auto-compile if build was skipped by deployment platform
+// Auto-trigger build if Frontend/dist is missing on deployment host
 if (!distPath) {
-  console.log('[Server] Frontend build not found on disk. Running automatic build...');
+  console.log('[Server] Frontend build not found on startup. Triggering build automatically...');
   try {
-    const { execSync } = require('child_process');
-    execSync('npm --prefix Frontend run build', { stdio: 'inherit' });
+    const frontendDir = fs.existsSync(path.join(__dirname, 'Frontend'))
+      ? path.join(__dirname, 'Frontend')
+      : path.join(process.cwd(), 'Frontend');
+    execSync('npm run build', { cwd: frontendDir, stdio: 'inherit' });
     distPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
-    console.log('[Server] Build finished successfully!');
   } catch (err) {
-    console.error('[Server] Automatic build attempt failed:', err.message);
+    console.error('[Server] On-demand frontend build error:', err.message);
   }
 }
 
 distPath = distPath || possibleDistPaths[0];
+
 app.use(express.static(distPath));
 
 // Fallback for Single Page Application (SPA) routing
 app.get('*', (req, res) => {
   const indexPath = path.join(distPath, 'index.html');
   if (fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send("SahakarGig frontend build not found. Please run 'npm run build' first.");
   }
-  const foundPath = possibleDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
-  if (foundPath) {
-    return res.sendFile(path.join(foundPath, 'index.html'));
-  }
-  res.status(404).send("SahakarGig frontend build not found. Please run 'npm run build' first.");
 });
 
 // Start listening if executed directly

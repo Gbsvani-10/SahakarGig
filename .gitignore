@@ -17,3 +17,7 @@ pnpm-debug.log*
 # System & OS
 .DS_Store
 Thumbs.db
+
+# Build outputs (optional, build runs on deployment)
+Frontend/dist
+dist

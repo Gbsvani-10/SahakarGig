@@ -5,7 +5,7 @@
   "description": "SahakarGig - Cooperative-Owned Digital Marketplace Platform",
   "main": "server.js",
   "scripts": {
-    "postinstall": "npm --prefix Frontend install --no-audit && npm --prefix Frontend run build",
+    "postinstall": "npm --prefix Frontend install --no-audit && npm --prefix Backend install --no-audit && npm --prefix Frontend run build",
     "build": "npm --prefix Frontend run build",
     "start": "node server.js",
     "dev": "npm --prefix Frontend run dev",
