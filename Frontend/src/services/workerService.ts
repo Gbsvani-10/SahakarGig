@@ -1,189 +1,121 @@
 import { WorkerProfile, WorkerSkill, WorkerCertification, WeeklyScheduleDay, NearbyServiceSearchQuery, NearbyWorkerResult, WorkerLocationUpdatePayload } from '../types';
 import { MOCK_WORKERS } from '../data/mockData';
-import { simulatedLatency, apiRequest } from './apiClient';
+import { apiRequest } from './apiClient';
 import { findNearbyWorkers } from '../server/geoUtils';
 
 let workersStore: WorkerProfile[] = [...MOCK_WORKERS];
 
+const mapBackendWorker = (w: any): WorkerProfile => {
+  const categoryMap: Record<string, any> = { plumbing:'Plumber', electrical:'Electrician', carpentry:'Carpenter', painting:'Painter', cleaning:'Cleaner', caregiver:'Caregiver', driving:'Driver', gardening:'Gardener', technician:'Technician' };
+  const category = categoryMap[String(w.skill || '').toLowerCase()] || 'Technician';
+  return {
+    ...MOCK_WORKERS.find(m => m.id === w.id || m.userId === w.user_id),
+    id: w.id,
+    userId: w.user_id || w.id,
+    name: w.name,
+    phone: w.phone,
+    email: MOCK_WORKERS.find(m => m.id === w.id)?.email || `${String(w.name).toLowerCase().replace(/\s+/g,'.')}@sahakargig.local`,
+    primaryCategory: category,
+    cooperativeId: w.cooperative_id,
+    cooperativeName: w.cooperative_name || 'SahakarGig Cooperative',
+    rating: Number(w.rating || 0),
+    isAvailable: Boolean(w.is_available),
+    availabilityStatus: w.is_available ? 'Available' : 'Offline',
+    verificationStatus: w.is_verified ? 'Verified' : 'Pending',
+    latitude: w.latitude == null ? undefined : Number(w.latitude),
+    longitude: w.longitude == null ? undefined : Number(w.longitude),
+    distanceKm: Number(w.distance_km || 0),
+    skills: [],
+    certifications: [],
+    schedule: [],
+    experienceYears: 0,
+    reviewCount: 0,
+    completedJobsCount: 0,
+    emergencyAvailable: true,
+    serviceArea: 'Cooperative service area',
+    hourlyRate: 350,
+    priceRange: '₹300–₹700',
+    welfareStatus: { insuranceActive: true, policyNumber: 'Pending', validUntil: '', schemeName: 'SahakarGig Worker Protection' },
+    avatarUrl: MOCK_WORKERS.find(m => m.id === w.id)?.avatarUrl || ''
+  } as WorkerProfile;
+};
+
 export const workerService = {
   async getAllWorkers(): Promise<WorkerProfile[]> {
-    return simulatedLatency([...workersStore], 200);
+    try {
+      const response = await apiRequest<any[]>('/workers');
+      if (Array.isArray(response.data)) {
+        workersStore = response.data.map(mapBackendWorker);
+        return [...workersStore];
+      }
+    } catch (e) { console.warn('[workerService] /workers unavailable:', e); }
+    return [...workersStore];
   },
 
   async getWorkerById(id: string): Promise<WorkerProfile | undefined> {
-    const worker = workersStore.find((w) => w.id === id || w.userId === id);
-    return simulatedLatency(worker, 150);
+    const local = workersStore.find(w => w.id === id || w.userId === id);
+    return local;
   },
 
   async getWorkersByCategory(category: string): Promise<WorkerProfile[]> {
-    const filtered = workersStore.filter((w) => w.primaryCategory === category);
-    return simulatedLatency(filtered, 200);
+    return workersStore.filter(w => w.primaryCategory === category);
   },
 
   async updateAvailability(workerId: string, status: 'Available' | 'Busy' | 'Offline'): Promise<WorkerProfile> {
-    const index = workersStore.findIndex((w) => w.id === workerId);
+    const index = workersStore.findIndex(w => w.id === workerId || w.userId === workerId);
     if (index === -1) throw new Error('Worker not found');
-    
-    workersStore[index] = {
-      ...workersStore[index],
-      availabilityStatus: status,
-      isAvailable: status === 'Available'
-    };
-    return simulatedLatency(workersStore[index], 150);
+    workersStore[index] = { ...workersStore[index], availabilityStatus: status, isAvailable: status === 'Available' };
+    return workersStore[index];
   },
 
   async updateSchedule(workerId: string, schedule: WeeklyScheduleDay[]): Promise<WorkerProfile> {
-    const index = workersStore.findIndex((w) => w.id === workerId);
+    const index = workersStore.findIndex(w => w.id === workerId || w.userId === workerId);
     if (index === -1) throw new Error('Worker not found');
-
-    workersStore[index] = {
-      ...workersStore[index],
-      schedule
-    };
-    return simulatedLatency(workersStore[index], 200);
+    workersStore[index] = { ...workersStore[index], schedule };
+    return workersStore[index];
   },
 
   async addSkill(workerId: string, skill: Omit<WorkerSkill, 'id' | 'verificationStatus'>): Promise<WorkerProfile> {
-    const index = workersStore.findIndex((w) => w.id === workerId);
+    const index = workersStore.findIndex(w => w.id === workerId || w.userId === workerId);
     if (index === -1) throw new Error('Worker not found');
-
-    const newSkill: WorkerSkill = {
-      ...skill,
-      id: `sk-${Date.now()}`,
-      verificationStatus: 'Pending'
-    };
-
-    workersStore[index] = {
-      ...workersStore[index],
-      skills: [...workersStore[index].skills, newSkill]
-    };
-    return simulatedLatency(workersStore[index], 200);
+    const updated = { ...workersStore[index], skills: [...workersStore[index].skills, { ...skill, id:`sk-${Date.now()}`, verificationStatus:'Pending' as const }] };
+    workersStore[index] = updated; return updated;
   },
 
-  async addCertification(
-    workerId: string, 
-    cert: Omit<WorkerCertification, 'id' | 'verificationStatus'>
-  ): Promise<WorkerProfile> {
-    const index = workersStore.findIndex((w) => w.id === workerId);
+  async addCertification(workerId: string, cert: Omit<WorkerCertification, 'id' | 'verificationStatus'>): Promise<WorkerProfile> {
+    const index = workersStore.findIndex(w => w.id === workerId || w.userId === workerId);
     if (index === -1) throw new Error('Worker not found');
-
-    const newCert: WorkerCertification = {
-      ...cert,
-      id: `cert-${Date.now()}`,
-      verificationStatus: 'Pending'
-    };
-
-    workersStore[index] = {
-      ...workersStore[index],
-      certifications: [...workersStore[index].certifications, newCert]
-    };
-    return simulatedLatency(workersStore[index], 200);
+    const updated = { ...workersStore[index], certifications: [...workersStore[index].certifications, { ...cert, id:`cert-${Date.now()}`, verificationStatus:'Pending' as const }] };
+    workersStore[index] = updated; return updated;
   },
 
   async updateVerificationStatus(workerId: string, status: 'Verified' | 'Pending' | 'Suspended'): Promise<WorkerProfile> {
-    const index = workersStore.findIndex((w) => w.id === workerId);
+    const index = workersStore.findIndex(w => w.id === workerId || w.userId === workerId);
     if (index === -1) throw new Error('Worker not found');
-
-    workersStore[index] = {
-      ...workersStore[index],
-      verificationStatus: status
-    };
-    return simulatedLatency(workersStore[index], 200);
+    if (status === 'Verified') await apiRequest(`/workers/${workerId}/verify`, { method:'PATCH' });
+    workersStore[index] = { ...workersStore[index], verificationStatus: status };
+    return workersStore[index];
   },
 
-  /**
-   * Search nearby workers via Backend API /api/services/nearby with local fallback
-   */
-  async getNearbyWorkers(query: NearbyServiceSearchQuery): Promise<{
-    center: { latitude: number; longitude: number };
-    radiusKm: number;
-    count: number;
-    workers: NearbyWorkerResult[];
-  }> {
+  async getNearbyWorkers(query: NearbyServiceSearchQuery): Promise<{center:{latitude:number;longitude:number};radiusKm:number;count:number;workers:NearbyWorkerResult[]}> {
     try {
-      const response = await apiRequest<{
-        center: { latitude: number; longitude: number };
-        radiusKm: number;
-        count: number;
-        workers: NearbyWorkerResult[];
-      }>('/services/nearby', {
-        method: 'POST',
-        body: JSON.stringify({
-          latitude: query.latitude,
-          longitude: query.longitude,
-          service: query.service,
-          radiusKm: query.radiusKm || 5,
-          availableOnly: query.availableOnly,
-          minRating: query.minRating
-        })
-      });
-
-      if (response && response.data && Array.isArray(response.data.workers)) {
-        return response.data;
+      const response = await apiRequest<any>('/services/nearby', { method:'POST', body:JSON.stringify(query) });
+      if (response?.data?.workers) {
+        const workers = response.data.workers.map((w:any) => ({ worker: mapBackendWorker(w), distanceKm:Number(w.distance_km || 0), matchScore: Math.max(0, Math.round(100 - Number(w.distance_km || 0) * 5)) }));
+        return { ...response.data, workers };
       }
-    } catch (err) {
-      console.warn('[workerService] Live /api/services/nearby fallback to local matching engine:', err);
-    }
-
-    // Direct local engine matching fallback
+    } catch (e) { console.warn('[workerService] nearby API failed; local fallback:', e); }
     const radius = query.radiusKm || 5;
-    const matches = findNearbyWorkers(
-      workersStore,
-      query.latitude,
-      query.longitude,
-      radius,
-      {
-        service: query.service,
-        availableOnly: query.availableOnly,
-        minRating: query.minRating
-      }
-    );
-
-    return simulatedLatency({
-      center: { latitude: query.latitude, longitude: query.longitude },
-      radiusKm: radius,
-      count: matches.length,
-      workers: matches
-    }, 150);
+    const matches = findNearbyWorkers(workersStore, query.latitude, query.longitude, radius, { service:query.service, availableOnly:query.availableOnly, minRating:query.minRating });
+    return { center:{latitude:query.latitude,longitude:query.longitude}, radiusKm:radius, count:matches.length, workers:matches };
   },
 
-  /**
-   * Update artisan service location via Backend API /api/workers/location
-   */
-  async updateWorkerLocation(
-    workerId: string,
-    payload: WorkerLocationUpdatePayload
-  ): Promise<WorkerProfile> {
-    const index = workersStore.findIndex((w) => w.id === workerId || w.userId === workerId);
-    if (index === -1) throw new Error('Artisan profile not found');
-
-    try {
-      const response = await apiRequest<WorkerProfile>('/workers/location', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          workerId,
-          ...payload
-        })
-      });
-      if (response && response.data) {
-        workersStore[index] = response.data;
-        return response.data;
-      }
-    } catch (err) {
-      console.warn('[workerService] Live PATCH /api/workers/location fallback to local store:', err);
-    }
-
-    const updatedWorker: WorkerProfile = {
-      ...workersStore[index],
-      latitude: payload.latitude,
-      longitude: payload.longitude,
-      locationAccuracy: payload.locationAccuracy || 10,
-      locationAddress: payload.locationAddress || workersStore[index].locationAddress,
-      serviceRadiusKm: payload.serviceRadiusKm || workersStore[index].serviceRadiusKm || 10,
-      locationUpdatedAt: new Date().toISOString()
-    };
-
-    workersStore[index] = updatedWorker;
-    return simulatedLatency(updatedWorker, 200);
+  async updateWorkerLocation(workerId:string, payload:WorkerLocationUpdatePayload):Promise<WorkerProfile> {
+    const index = workersStore.findIndex(w=>w.id===workerId || w.userId===workerId);
+    if(index===-1) throw new Error('Worker not found');
+    const response = await apiRequest<any>('/workers/location',{method:'PATCH',body:JSON.stringify(payload)});
+    const updated = mapBackendWorker(response.data);
+    workersStore[index] = {...workersStore[index],...updated,latitude:payload.latitude,longitude:payload.longitude,locationAccuracy:payload.locationAccuracy,locationAddress:payload.locationAddress,serviceRadiusKm:payload.serviceRadiusKm || workersStore[index].serviceRadiusKm,locationUpdatedAt:new Date().toISOString()};
+    return workersStore[index];
   }
 };
