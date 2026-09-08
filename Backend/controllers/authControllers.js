@@ -3,6 +3,14 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const getJwtSecret = () => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret.length < 32) {
+        throw new Error('JWT_SECRET must be configured and contain at least 32 characters.');
+    }
+    return secret;
+};
+
 exports.register = async (req, res) => {
     const { name, email, password, phone, role } = req.body;
     try {
@@ -28,9 +36,17 @@ exports.login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
+        let jwtSecret;
+        try {
+            jwtSecret = getJwtSecret();
+        } catch (configError) {
+            console.error(configError.message);
+            return res.status(500).json({ error: 'Authentication service is not configured securely.' });
+        }
+
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET || 'fallback_secret',
+            jwtSecret,
             { expiresIn: '24h' }
         );
 
