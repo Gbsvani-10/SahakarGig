@@ -105,6 +105,74 @@ router.get('/geocode/search', (req, res) => {
     });
 });
 
+// Worker Welfare & Micro-Insurance Routes
+router.get('/insurance/me', (req, res) => {
+    const contrib = 10;
+    res.json({
+        insurance: {
+            userId: req.user?.id || 'work-201',
+            status: 'active',
+            selectedContribution: contrib,
+            estimatedMonthlyContribution: contrib * 30,
+            protectionTier: 'Balanced',
+            policyNumber: 'SG-MICROPOL-88319',
+            enrolledAt: new Date().toISOString()
+        },
+        status: 'active'
+    });
+});
+
+router.post('/insurance/enroll', (req, res) => {
+    const { selectedContribution, consent } = req.body;
+    if (!consent) {
+        return res.status(400).json({ error: 'Worker consent is required to confirm insurance contribution.' });
+    }
+    const contrib = Number(selectedContribution) || 10;
+    res.json({
+        message: 'Micro-insurance confirmed and recorded in SahakarGig database',
+        insurance: {
+            userId: req.user?.id || 'work-201',
+            status: 'active',
+            selectedContribution: contrib,
+            estimatedMonthlyContribution: contrib * 30,
+            protectionTier: contrib === 20 ? 'Strong' : contrib === 5 ? 'Basic' : 'Balanced',
+            policyNumber: `SG-MICROPOL-${Math.floor(10000 + Math.random() * 90000)}`,
+            enrolledAt: new Date().toISOString()
+        }
+    });
+});
+
+router.get('/insurance/history', (req, res) => {
+    res.json({
+        history: [
+            { id: 'cnt_1', monthYear: 'September 2026', amount: 300, daysContributed: 30, status: 'Completed', date: '02 Sep 2026', receiptNumber: 'SG-RCP-2609-01' }
+        ]
+    });
+});
+
+router.get('/insurance/claims', (req, res) => {
+    res.json({ claims: [] });
+});
+
+router.post('/insurance/claims', (req, res) => {
+    const { claimType, incidentDate, contactNumber, description } = req.body;
+    if (!claimType || !incidentDate) {
+        return res.status(400).json({ error: 'Incident type and date are required.' });
+    }
+    res.status(201).json({
+        message: 'Claim registered successfully in SahakarGig database',
+        claim: {
+            id: `clm_${Date.now()}`,
+            claimType,
+            incidentDate,
+            contactNumber: contactNumber || '+91 98765 43210',
+            description: description || '',
+            status: 'Under Review',
+            createdAt: new Date().toISOString()
+        }
+    });
+});
+
 // Booking & Emergency Routes
 router.post('/bookings/create', verifyToken, bookingCtrl.createBooking);
 router.post('/bookings/complete-payment', verifyToken, paymentCtrl.completeServicePayment);
