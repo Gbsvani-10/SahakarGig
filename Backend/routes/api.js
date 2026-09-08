@@ -7,6 +7,7 @@ const workerCtrl = require('../controllers/workerControllers');
 const bookingCtrl = require('../controllers/bookingControllers');
 const adminCtrl = require('../controllers/adminControllers');
 const paymentCtrl = require('../controllers/paymentControllers');
+const notificationCtrl = require('../controllers/notificationControllers');
 const aiBridgeCtrl = require('../controllers/aiBridgeController');
 const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 
@@ -23,6 +24,10 @@ router.get('/geocode/search',async(req,res)=>{const q=String(req.query.q||'').tr
 router.post('/bookings/create',verifyToken,authorizeRoles('customer'),bookingCtrl.createBooking);
 router.get('/bookings',verifyToken,async(req,res)=>{try{const r=await db.query(req.user.role==='worker'?`SELECT b.*,w.name worker_name,w.phone worker_phone FROM bookings b LEFT JOIN workers w ON w.id=b.worker_id WHERE w.user_id=$1 ORDER BY b.created_at DESC`:`SELECT b.*,w.name worker_name,w.phone worker_phone FROM bookings b LEFT JOIN workers w ON w.id=b.worker_id WHERE b.customer_id=$1 ORDER BY b.created_at DESC`,[req.user.id]);res.json({success:true,data:r.rows,timestamp:new Date().toISOString()});}catch(e){console.error(e);res.status(500).json({error:'Failed to fetch bookings'});}});
 router.patch('/bookings/:bookingId/status',verifyToken,async(req,res)=>{const{status}=req.body||{};if(!['requested','accepted','completed','cancelled'].includes(status))return res.status(400).json({error:'Invalid booking status'});try{const bq=await db.query(`SELECT b.*,w.user_id AS worker_user_id FROM bookings b LEFT JOIN workers w ON w.id=b.worker_id WHERE b.id=$1`,[req.params.bookingId]);if(!bq.rows.length)return res.status(404).json({error:'Booking not found'});const b=bq.rows[0],allowed=(req.user.role==='worker'&&String(b.worker_user_id)===String(req.user.id))||(req.user.role==='customer'&&String(b.customer_id)===String(req.user.id)&&status==='cancelled')||req.user.role==='coop_admin';if(!allowed)return res.status(403).json({error:'You are not allowed to update this booking'});const r=await db.query('UPDATE bookings SET status=$1 WHERE id=$2 RETURNING *',[status,req.params.bookingId]);if(status==='accepted'&&b.worker_id)await db.query('UPDATE workers SET is_available=false WHERE id=$1',[b.worker_id]);if(['completed','cancelled'].includes(status)&&b.worker_id)await db.query('UPDATE workers SET is_available=true WHERE id=$1',[b.worker_id]);res.json({success:true,data:r.rows[0]});}catch(e){console.error(e);res.status(500).json({error:'Failed to update booking'});}});
+router.get('/notifications',verifyToken,notificationCtrl.getNotifications);
+router.post('/notifications',verifyToken,notificationCtrl.createNotification);
+router.patch('/notifications/:notificationId/read',verifyToken,notificationCtrl.markAsRead);
+router.patch('/notifications/read-all',verifyToken,notificationCtrl.markAllAsRead);
 router.post('/payments/create-order',verifyToken,authorizeRoles('customer'),paymentCtrl.createRazorpayOrder);
 router.post('/payments/verify',verifyToken,authorizeRoles('customer'),paymentCtrl.verifyRazorpayPayment);
 router.post('/bookings/complete-payment',verifyToken,authorizeRoles('customer'),paymentCtrl.verifyRazorpayPayment);
