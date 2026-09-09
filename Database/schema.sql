@@ -65,3 +65,40 @@ CREATE TABLE ratings (
     feedback_text TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Registration/onboarding fields used by the unified landing-page flow
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS pincode VARCHAR(10);
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS preferred_area TEXT;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS experience_years NUMERIC(5,2) DEFAULT 0;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}';
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS preferred_work_type VARCHAR(40) DEFAULT 'Flexible / Gig';
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS expected_daily_wage NUMERIC(10,2) DEFAULT 0;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS availability VARCHAR(30) DEFAULT 'AVAILABLE';
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS identity_doc_type VARCHAR(30);
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS identity_doc_number_masked VARCHAR(30);
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS identity_doc_filename TEXT;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS identity_doc_data TEXT;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS emergency_name VARCHAR(100);
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS emergency_phone VARCHAR(20);
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS emergency_relation VARCHAR(50);
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS preferred_radius_km NUMERIC(6,2) DEFAULT 15;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS languages TEXT[] DEFAULT '{}';
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS work_experience_summary TEXT;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS profile_completeness NUMERIC(5,2) DEFAULT 0;
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+CREATE TABLE IF NOT EXISTS customer_profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  full_name VARCHAR(100) NOT NULL,
+  contact_number VARCHAR(20) NOT NULL,
+  email VARCHAR(150) NOT NULL,
+  address TEXT NOT NULL,
+  pincode VARCHAR(10) NOT NULL,
+  preferred_service_area TEXT,
+  common_services_required TEXT[] DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
