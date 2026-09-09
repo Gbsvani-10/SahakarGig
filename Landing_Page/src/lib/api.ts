@@ -55,6 +55,13 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   return data as T;
 }
 
+function normalizeWorkerProfile(profile: WorkerProfile | null): WorkerProfile | null {
+  if (!profile) return null;
+  const normalized = profile as WorkerProfile & { totalEarnings?: number };
+  if (typeof normalized.totalEarnings !== 'number') normalized.totalEarnings = 0;
+  return normalized;
+}
+
 function createDemoWorkerRegistration(data: any): { token: string; user: User; workerProfile: WorkerProfile } {
   const now = new Date().toISOString();
   const id = `demo_worker_${Date.now()}`;
@@ -134,10 +141,11 @@ export const api = {
   // Auth
   registerWorker: async (data: any) => {
     try {
-      return await fetchApi<{ token: string; user: User; workerProfile: WorkerProfile }>('/api/auth/register-worker', {
+      const result = await fetchApi<{ token: string; user: User; workerProfile: WorkerProfile }>('/api/auth/register-worker', {
         method: 'POST',
         body: JSON.stringify(data)
       });
+      return { ...result, workerProfile: normalizeWorkerProfile(result.workerProfile)! };
     } catch (err) {
       console.warn('Worker registration API unavailable; using demo profile.', err);
       return createDemoWorkerRegistration(data);
@@ -173,11 +181,7 @@ export const api = {
   // Worker Profile endpoints
   getWorkerProfile: async () => {
     const me = await fetchApi<{ user: User; profile: WorkerProfile | null }>('/api/auth/me');
-    const profile = me.profile as (WorkerProfile & { totalEarnings?: number }) | null;
-    if (profile && typeof profile.totalEarnings !== 'number') {
-      profile.totalEarnings = 0;
-    }
-    return profile;
+    return normalizeWorkerProfile(me.profile);
   },
 
   getCustomerProfile: async () => {
