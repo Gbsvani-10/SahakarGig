@@ -9,10 +9,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (identifier: string, pass: string, requestedRole?: UserRole) => Promise<void>;
-  loginAs: (role: UserRole) => Promise<void>;
+  adoptSession: (user: User, token: string) => void;
   register: (userData: Partial<User> & { password?: string }) => Promise<void>;
   logout: () => void;
-  enterDemoRole: (role: Exclude<UserRole, 'guest'>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,19 +24,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const restore = async () => {
-      const demoRole = localStorage.getItem('sahakar_demo_role') as Exclude<UserRole, 'guest'> | null;
-      if (demoRole && ['worker', 'customer', 'admin'].includes(demoRole)) {
-        const demoUsers: Record<Exclude<UserRole, 'guest'>, User> = {
-          worker: { id: 'work-201', name: 'Demo Worker', email: 'worker@sahakargig.demo', phone: '+91 9000000001', role: 'worker', city: 'Demo City', state: 'Andhra Pradesh' },
-          customer: { id: 'cust-101', name: 'Demo Customer', email: 'customer@sahakargig.demo', phone: '+91 9000000002', role: 'customer', city: 'Demo City', state: 'Andhra Pradesh' },
-          admin: { id: 'admin-001', name: 'Demo Admin', email: 'admin@sahakargig.demo', phone: '+91 9000000003', role: 'admin', city: 'Demo City', state: 'Andhra Pradesh' }
-        };
-        setUser(demoUsers[demoRole]);
-        setRole(demoRole);
-        setToken(null);
-        setIsLoading(false);
-        return;
-      }
       const savedToken = localStorage.getItem('sahakar_auth_token');
       if (!savedToken) {
         setIsLoading(false);
@@ -64,7 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(res.token);
     localStorage.setItem('sahakar_auth_token', res.token);
     localStorage.setItem('sahakar_user_role', res.user.role);
-    localStorage.removeItem('sahakar_demo_role');
   };
 
   const login = async (identifier: string, pass: string, requestedRole?: UserRole) => {
@@ -73,10 +58,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     finally { setIsLoading(false); }
   };
 
-  const loginAs = async (targetRole: UserRole) => {
-    setIsLoading(true);
-    try { persist(await authService.loginAs(targetRole)); }
-    finally { setIsLoading(false); }
+  const adoptSession = (sessionUser: User, sessionToken: string) => {
+    setUser(sessionUser);
+    setRole(sessionUser.role);
+    setToken(sessionToken);
+    localStorage.setItem('sahakar_auth_token', sessionToken);
+    localStorage.setItem('sahakar_user_role', sessionUser.role);
   };
 
   const register = async (userData: Partial<User> & { password?: string }) => {
@@ -85,34 +72,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     finally { setIsLoading(false); }
   };
 
-  const enterDemoRole = (targetRole: Exclude<UserRole, 'guest'>) => {
-    const demoUsers: Record<Exclude<UserRole, 'guest'>, User> = {
-      worker: { id: 'work-201', name: 'Demo Worker', email: 'worker@sahakargig.demo', phone: '+91 9000000001', role: 'worker', city: 'Demo City', state: 'Andhra Pradesh' },
-      customer: { id: 'cust-101', name: 'Demo Customer', email: 'customer@sahakargig.demo', phone: '+91 9000000002', role: 'customer', city: 'Demo City', state: 'Andhra Pradesh' },
-      admin: { id: 'admin-001', name: 'Demo Admin', email: 'admin@sahakargig.demo', phone: '+91 9000000003', role: 'admin', city: 'Demo City', state: 'Andhra Pradesh' }
-    };
-    const demoUser = demoUsers[targetRole];
-    setUser(demoUser);
-    setRole(targetRole);
-    setToken(null);
-    localStorage.removeItem('sahakar_auth_token');
-    localStorage.setItem('sahakar_user_role', targetRole);
-    localStorage.setItem('sahakar_demo_role', targetRole);
-  };
-
   const logout = () => {
     setUser(null);
     setRole('guest');
     setToken(null);
     localStorage.removeItem('sahakar_auth_token');
     localStorage.removeItem('sahakar_user_role');
-    localStorage.removeItem('sahakar_demo_role');
   };
 
   return (
     <AuthContext.Provider value={{
       user, role, token, isAuthenticated: !!user && role !== 'guest', isLoading,
-      login, loginAs, register, logout, enterDemoRole
+      login, adoptSession, register, logout
     }}>
       {children}
     </AuthContext.Provider>
