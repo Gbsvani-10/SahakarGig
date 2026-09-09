@@ -13,8 +13,7 @@ export default defineConfig(() => {
     },
 
     preview: {
-        allowedHosts:
-    ["sahakargig-jl19.onrender.com"],
+        allowedHosts:  true,
       },
     
     server: {
