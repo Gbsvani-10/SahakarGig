@@ -139,8 +139,6 @@ export const api = {
         body: JSON.stringify(data)
       });
     } catch (err) {
-      // Keep the onboarding demo usable when the backend/database is unavailable.
-      // Real API registration is still attempted first.
       console.warn('Worker registration API unavailable; using demo profile.', err);
       return createDemoWorkerRegistration(data);
     }
@@ -175,7 +173,11 @@ export const api = {
   // Worker Profile endpoints
   getWorkerProfile: async () => {
     const me = await fetchApi<{ user: User; profile: WorkerProfile | null }>('/api/auth/me');
-    return me.profile;
+    const profile = me.profile as (WorkerProfile & { totalEarnings?: number }) | null;
+    if (profile && typeof profile.totalEarnings !== 'number') {
+      profile.totalEarnings = 0;
+    }
+    return profile;
   },
 
   getCustomerProfile: async () => {
