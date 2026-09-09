@@ -15,6 +15,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 const apiRouter = require('./Backend/routes/api');
+const { ensureRegistrationSchema } = require('./Backend/db');
 app.use('/api', apiRouter);
 
 const io = new Server(server, { cors: { origin: true, credentials: true } });
@@ -46,7 +47,12 @@ if (!fs.existsSync(path.join(distPath, 'index.html'))) {
 }
 
 if (require.main === module) {
-  server.listen(PORT, '0.0.0.0', () => console.log(`SahakarGig running on port ${PORT}`));
+  ensureRegistrationSchema()
+    .then(() => server.listen(PORT, '0.0.0.0', () => console.log(`SahakarGig running on port ${PORT}`)))
+    .catch((err) => {
+      console.error('[Database] Schema initialization failed:', err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = app;
