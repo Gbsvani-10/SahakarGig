@@ -1,11 +1,10 @@
-```tsx
 import React, { useEffect, useState } from 'react';
-import { Modal } from '../common/Modal';
-import { Input } from '../common/Input';
-import { Button } from '../common/Button';
+import { Modal } from '../ui/Modal';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
 import { MapPin, Navigation, Check } from 'lucide-react';
 
-export interface LocationPickerModalProps {
+interface LocationPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialLat: number;
@@ -14,7 +13,7 @@ export interface LocationPickerModalProps {
   initialRadiusKm?: number;
   mode?: 'customer' | 'worker';
   title?: string;
-  onSaveLocation: (loc: {
+  onSaveLocation: (location: {
     latitude: number;
     longitude: number;
     address: string;
@@ -30,280 +29,140 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
   initialAddress = '',
   initialRadiusKm = 10,
   mode = 'customer',
-  title = 'Select Location',
+  title = 'Choose Service Location',
   onSaveLocation,
 }) => {
-  const [lat, setLat] = useState<number>(initialLat);
-  const [lng, setLng] = useState<number>(initialLng);
-  const [address, setAddress] = useState<string>(initialAddress);
-  const [radiusKm, setRadiusKm] = useState<number>(initialRadiusKm);
-  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [latitude, setLatitude] = useState(initialLat);
+  const [longitude, setLongitude] = useState(initialLng);
+  const [address, setAddress] = useState(initialAddress);
+  const [radiusKm, setRadiusKm] = useState(initialRadiusKm);
+  const [isLocating, setIsLocating] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
-      setLat(initialLat);
-      setLng(initialLng);
-      setAddress(initialAddress);
-      setRadiusKm(initialRadiusKm);
-    }
-  }, [
-    isOpen,
-    initialLat,
-    initialLng,
-    initialAddress,
-    initialRadiusKm,
-  ]);
+    if (!isOpen) return;
+    setLatitude(initialLat);
+    setLongitude(initialLng);
+    setAddress(initialAddress);
+    setRadiusKm(initialRadiusKm);
+    setError('');
+  }, [isOpen, initialLat, initialLng, initialAddress, initialRadiusKm]);
 
-  const handleUseCurrentLocation = () => {
+  const useCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
+      setError('Geolocation is not supported by this browser.');
       return;
     }
 
     setIsLocating(true);
+    setError('');
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-
-        setLat(latitude);
-        setLng(longitude);
-        setAddress(
-          `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-        );
+      ({ coords }) => {
+        setLatitude(coords.latitude);
+        setLongitude(coords.longitude);
         setIsLocating(false);
       },
-      (error) => {
-        console.error('Geolocation error:', error);
-
-        let message = 'Could not access your current location.';
-
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            message =
-              'Location permission was denied. Please allow location access in your browser.';
-            break;
-
-          case error.POSITION_UNAVAILABLE:
-            message =
-              'Your current location could not be determined.';
-            break;
-
-          case error.TIMEOUT:
-            message =
-              'Location request timed out. Please try again.';
-            break;
-        }
-
-        alert(message);
+      (geoError) => {
         setIsLocating(false);
+        setError(geoError.message || 'Unable to get your current location.');
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 30000,
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
   };
 
   const handleSave = () => {
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      alert('Please enter valid latitude and longitude.');
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    const radius = Number(radiusKm);
+
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+      setError('Enter a valid latitude between -90 and 90.');
       return;
     }
-
-    if (lat < -90 || lat > 90) {
-      alert('Latitude must be between -90 and 90.');
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+      setError('Enter a valid longitude between -180 and 180.');
       return;
     }
-
-    if (lng < -180 || lng > 180) {
-      alert('Longitude must be between -180 and 180.');
+    if (mode === 'worker' && (!Number.isFinite(radius) || radius < 1 || radius > 50)) {
+      setError('Worker operational radius must be between 1 and 50 km.');
       return;
     }
-
-    if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
-      alert('Please enter a valid service radius.');
-      return;
-    }
-
-    const finalAddress =
-      address.trim() || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
     onSaveLocation({
       latitude: lat,
       longitude: lng,
-      address: finalAddress,
-      radiusKm: mode === 'worker' ? radiusKm : undefined,
+      address: address.trim(),
+      ...(mode === 'worker' ? { radiusKm: radius } : {}),
     });
-
     onClose();
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <div className="space-y-4">
+        <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+          <div className="flex items-center gap-3">
+            <MapPin className="h-5 w-5" />
+            <div>
+              <p className="font-medium">Service location</p>
+              <p className="text-sm text-gray-500">Set the coordinates used for matching.</p>
+            </div>
+          </div>
+          <Button type="button" onClick={useCurrentLocation} disabled={isLocating}>
+            <Navigation className="mr-2 h-4 w-4" />
+            {isLocating ? 'Locating…' : 'Use current location'}
+          </Button>
+        </div>
 
-        {/* Address */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">
-            Location Address / Landmark
-          </label>
+        <Input
+          label="Address"
+          value={address}
+          onChange={(event) => setAddress(event.target.value)}
+          placeholder="Enter service address"
+        />
 
+        <div className="grid grid-cols-2 gap-3">
           <Input
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="e.g. Connaught Place, New Delhi"
-            leftIcon={
-              <MapPin className="w-4 h-4 text-slate-400" />
-            }
+            label="Latitude"
+            type="number"
+            step="any"
+            value={latitude}
+            onChange={(event) => setLatitude(Number(event.target.value))}
+          />
+          <Input
+            label="Longitude"
+            type="number"
+            step="any"
+            value={longitude}
+            onChange={(event) => setLongitude(Number(event.target.value))}
           />
         </div>
 
-        {/* Coordinates */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Latitude
-            </label>
-
-            <Input
-              type="number"
-              step="any"
-              value={lat}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-
-                if (Number.isFinite(value)) {
-                  setLat(value);
-                }
-              }}
-              placeholder="e.g. 16.5062"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Longitude
-            </label>
-
-            <Input
-              type="number"
-              step="any"
-              value={lng}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-
-                if (Number.isFinite(value)) {
-                  setLng(value);
-                }
-              }}
-              placeholder="e.g. 80.6480"
-            />
-          </div>
-
-        </div>
-
-        {/* Worker service radius */}
         {mode === 'worker' && (
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Operational Radius:{' '}
-              <span className="text-emerald-700 font-bold">
-                {radiusKm} km
-              </span>
-            </label>
-
-            <input
-              type="range"
-              min="1"
-              max="50"
-              step="1"
-              value={radiusKm}
-              onChange={(e) =>
-                setRadiusKm(Number(e.target.value))
-              }
-              className="w-full accent-emerald-600"
-            />
-
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span>1 km</span>
-              <span>25 km</span>
-              <span>50 km</span>
-            </div>
-          </div>
+          <Input
+            label="Operational radius (km)"
+            type="number"
+            min={1}
+            max={50}
+            step="0.5"
+            value={radiusKm}
+            onChange={(event) => setRadiusKm(Number(event.target.value))}
+          />
         )}
 
-        {/* GPS information */}
-        <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
-          <div className="flex items-start gap-2">
-            <Navigation className="w-4 h-4 text-emerald-600 mt-0.5" />
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <div>
-              <p className="text-xs font-semibold text-slate-700">
-                GPS Location
-              </p>
-
-              <p className="text-xs text-slate-500 mt-1">
-                Use your device's GPS to automatically detect
-                your current coordinates.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="pt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-slate-100">
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleUseCurrentLocation}
-            disabled={isLocating}
-            leftIcon={
-              <Navigation className="w-3.5 h-3.5 text-emerald-600" />
-            }
-          >
-            {isLocating ? 'Detecting Location...' : 'Use My GPS'}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
           </Button>
-
-          <div className="flex items-center justify-end gap-2">
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type="button"
-              size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={handleSave}
-              leftIcon={
-                <Check className="w-3.5 h-3.5" />
-              }
-            >
-              Confirm Location
-            </Button>
-
-          </div>
+          <Button type="button" onClick={handleSave}>
+            <Check className="mr-2 h-4 w-4" />
+            Save location
+          </Button>
         </div>
-
       </div>
     </Modal>
   );
 };
-
-export default LocationPickerModal;
-```
