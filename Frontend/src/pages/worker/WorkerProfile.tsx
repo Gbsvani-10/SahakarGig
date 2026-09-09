@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { ServiceMap } from '../../components/map/ServiceMap';
+import  ServiceMap  from '../../components/map/ServiceMap';
 import { LocationPickerModal } from '../../components/map/LocationPickerModal';
 import { ShieldCheck, Building2, Phone, Mail, MapPin, CheckCircle2, Navigation, Compass, Radio } from 'lucide-react';
 
