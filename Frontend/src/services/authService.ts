@@ -42,9 +42,7 @@ export const authService = {
     return { user: mapUser(data.user, identifier), token: data.token };
   },
 
-  async loginAs(_role: UserRole): Promise<AuthResponse> {
-    throw new Error('Demo login is disabled. Please sign in with a registered SahakarGig account.');
-  },
+
 
   async register(userData: Partial<User> & { password?: string }): Promise<AuthResponse> {
     const requestedRole = userData.role === 'worker' ? 'worker' : 'customer';
