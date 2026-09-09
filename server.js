@@ -9,50 +9,221 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
+
 const PORT = Number(process.env.PORT || 3000);
 
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+
+// ============================================================
+// MIDDLEWARE
+// ============================================================
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
+
+// Worker registration may contain
+// identity proof / certificate data as Base64.
+// Increase request body limit accordingly.
+app.use(
+  express.json({
+    limit: '10mb',
+  })
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: '10mb',
+  })
+);
+
+
+// ============================================================
+// API
+// ============================================================
 
 const apiRouter = require('./Backend/routes/api');
-const { ensureRegistrationSchema } = require('./Backend/db');
+const {
+  ensureRegistrationSchema,
+} = require('./Backend/db');
+
 app.use('/api', apiRouter);
 
-const io = new Server(server, { cors: { origin: true, credentials: true } });
-io.on('connection', socket => {
-  socket.on('join_booking_room', bookingId => {
-    if (bookingId) socket.join(`booking_${bookingId}`);
-  });
-  socket.on('join_skill_room', skill => {
-    if (skill) socket.join(`room_${skill}`);
-  });
-  socket.on('update_location', data => {
-    const lat = Number(data?.latitude), lng = Number(data?.longitude), bookingId = data?.bookingId;
-    if (!bookingId || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-    io.to(`booking_${bookingId}`).emit('worker_location_changed', { latitude: lat, longitude: lng });
-  });
+
+// ============================================================
+// SOCKET.IO
+// ============================================================
+
+const io = new Server(server, {
+  cors: {
+    origin: true,
+    credentials: true,
+  },
 });
+
+io.on('connection', (socket) => {
+
+  // Join booking room
+  socket.on(
+    'join_booking_room',
+    (bookingId) => {
+      if (bookingId) {
+        socket.join(
+          `booking_${bookingId}`
+        );
+      }
+    }
+  );
+
+
+  // Join skill room
+  socket.on(
+    'join_skill_room',
+    (skill) => {
+      if (skill) {
+        socket.join(
+          `room_${skill}`
+        );
+      }
+    }
+  );
+
+
+  // Worker live location update
+  socket.on(
+    'update_location',
+    (data) => {
+
+      const latitude = Number(
+        data?.latitude
+      );
+
+      const longitude = Number(
+        data?.longitude
+      );
+
+      const bookingId =
+        data?.bookingId;
+
+      if (
+        !bookingId ||
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude)
+      ) {
+        return;
+      }
+
+      io
+        .to(`booking_${bookingId}`)
+        .emit(
+          'worker_location_changed',
+          {
+            latitude,
+            longitude,
+          }
+        );
+    }
+  );
+});
+
 app.set('io', io);
 
-const distPath = path.join(__dirname, 'Frontend', 'dist');
-if (!fs.existsSync(path.join(distPath, 'index.html'))) {
-  console.error('Frontend build missing. Run: npm run build');
+
+// ============================================================
+// FRONTEND STATIC FILES
+// ============================================================
+
+const distPath = path.join(
+  __dirname,
+  'Frontend',
+  'dist'
+);
+
+const indexPath = path.join(
+  distPath,
+  'index.html'
+);
+
+if (!fs.existsSync(indexPath)) {
+
+  console.error(
+    'Frontend build missing. Run: npm run build'
+  );
+
   process.exitCode = 1;
+
 } else {
-  app.use(express.static(distPath));
-  app.get('*', (req, res) => {
-    if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API endpoint not found' });
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
+
+  app.use(
+    express.static(distPath)
+  );
+
+
+  // React Router fallback
+  app.get(
+    '*',
+    (req, res) => {
+
+      if (
+        req.path.startsWith('/api/')
+      ) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            error:
+              'API endpoint not found',
+          });
+      }
+
+      res.sendFile(indexPath);
+    }
+  );
 }
 
+
+// ============================================================
+// START SERVER
+// ============================================================
+
 if (require.main === module) {
+
   ensureRegistrationSchema()
-    .then(() => server.listen(PORT, '0.0.0.0', () => console.log(`SahakarGig running on port ${PORT}`)))
-    .catch((err) => {
-      console.error('[Database] Schema initialization failed:', err.message);
+
+    .then(() => {
+
+      server.listen(
+        PORT,
+        '0.0.0.0',
+        () => {
+
+          console.log(
+            `SahakarGig running on port ${PORT}`
+          );
+
+        }
+      );
+
+    })
+
+    .catch((error) => {
+
+      console.error(
+        '[Database] Schema initialization failed:',
+        error.message
+      );
+
       process.exit(1);
+
     });
 }
+
+
+// ============================================================
+// EXPORT
+// ============================================================
 
 module.exports = app;
