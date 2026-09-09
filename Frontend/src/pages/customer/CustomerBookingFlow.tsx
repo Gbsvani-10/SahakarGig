@@ -6,7 +6,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { ServiceMap } from '../../components/map/ServiceMap';
+import  ServiceMap  from '../../components/map/ServiceMap';
 import { LocationPickerModal } from '../../components/map/LocationPickerModal';
 import { calculateHaversineDistanceKm } from '../../server/geoUtils';
 import { 
