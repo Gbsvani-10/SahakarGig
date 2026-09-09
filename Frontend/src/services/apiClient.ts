@@ -1,4 +1,4 @@
-// Base API Client abstraction ready for real backend or mock mode
+// Shared API client for the live SahakarGig backend.
 export const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 
 export interface ApiResponse<T> {
@@ -6,10 +6,6 @@ export interface ApiResponse<T> {
   data: T;
   message?: string;
   timestamp: string;
-}
-
-export async function simulatedLatency<T>(data: T, delayMs: number = 200): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(data), delayMs));
 }
 
 export async function apiRequest<T>(
@@ -23,21 +19,25 @@ export async function apiRequest<T>(
     ...(options.headers || {})
   };
 
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers
+  });
+
+  let responseBody: unknown;
   try {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers
-    });
-
-    if (!res.ok) {
-      throw new Error(`API Error ${res.status}: ${res.statusText}`);
-    }
-
-    const data = await res.json();
-    return data as ApiResponse<T>;
-  } catch (err: any) {
-    // Graceful fallback for mock mode
-    console.warn(`[ApiClient] Live API call to ${endpoint} failed, relying on mock service:`, err.message);
-    throw err;
+    responseBody = await res.json();
+  } catch {
+    responseBody = undefined;
   }
+
+  if (!res.ok) {
+    const message =
+      typeof responseBody === 'object' && responseBody !== null && 'error' in responseBody
+        ? String((responseBody as { error?: unknown }).error)
+        : `API Error ${res.status}: ${res.statusText}`;
+    throw new Error(message);
+  }
+
+  return responseBody as ApiResponse<T>;
 }
