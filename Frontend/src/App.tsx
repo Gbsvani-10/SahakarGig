@@ -4,7 +4,6 @@ import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
 import { ToastContainer } from './components/common/ToastContainer';
-import { PublicLayout } from './layouts/PublicLayout';
 import { CustomerLayout } from './layouts/CustomerLayout';
 import { WorkerLayout } from './layouts/WorkerLayout';
 import { AdminLayout } from './layouts/AdminLayout';
