@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { DemoBanner } from '../components/common/DemoBanner';
 import { ToastContainer } from '../components/common/ToastContainer';
 import {
   LayoutDashboard,
