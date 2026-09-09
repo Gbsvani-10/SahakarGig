@@ -52,14 +52,14 @@ export const LoginPage: React.FC = () => {
           </div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Sign in to SahakarGig</h1>
           <p className="text-xs text-gray-700">
-            Cooperative Gig Services Platform • National Council for Cooperative Training
+            Cooperative Gig Services Platform • Labour Cooperative Federations
           </p>
         </div>
 
-        {/* Quick Role Selectors for SIH Judges & Demo */}
+        {/* Quick Role Selectors for Demo */}
         <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3.5 space-y-2">
           <p className="text-[11px] font-bold text-emerald-950 uppercase tracking-wider text-center">
-            SIH 2026 1-Click Fast Login
+            1-Click Quick Demo Login
           </p>
           <div className="grid grid-cols-3 gap-1.5">
             <button

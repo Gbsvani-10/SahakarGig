@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, ShieldCheck, HeartHandshake, PhoneCall, Mail, ExternalLink } from 'lucide-react';
+import { Building2, ShieldCheck, HeartHandshake, PhoneCall, Mail } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
     <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
-          {/* Col 1: Brand & Ministry Affiliation */}
+          {/* Col 1: Brand & Affiliation */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
@@ -16,10 +16,10 @@ export const Footer: React.FC = () => {
               <div>
                 <span className="text-xl font-bold text-white tracking-tight">SahakarGig</span>
                 <span className="ml-2 text-[10px] uppercase font-bold bg-emerald-900/60 text-emerald-300 border border-emerald-700/50 px-1.5 py-0.5 rounded">
-                  SIH 2026 #26089
+                  Cooperative Platform
                 </span>
                 <p className="text-xs text-slate-400">
-                  National Council for Cooperative Training (NCCT) & Ministry of Cooperation
+                  Labour Cooperative Societies & Federations Platform
                 </p>
               </div>
             </div>
@@ -93,7 +93,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/worker/skills" className="hover:text-emerald-400 transition-colors">
-                  NCCT Skill Certification
+                  Skill Certification
                 </Link>
               </li>
               <li>
@@ -114,10 +114,10 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>support@sahakargig.gov.in</span>
+                <span>support@sahakargig.com</span>
               </li>
               <li className="text-[11px] text-slate-400 leading-normal pt-1">
-                NCCT HQ: 3, Siri Institutional Area, August Kranti Marg, New Delhi 110016
+                Cooperative HQ: Siri Institutional Area, August Kranti Marg, New Delhi 110016
               </li>
             </ul>
           </div>
@@ -125,7 +125,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
-          <p>© 2026 SahakarGig. Built for Smart India Hackathon (SIH 2026). Ministry of Cooperation, Govt. of India.</p>
+          <p>© 2026 SahakarGig. Cooperative-Owned Digital Marketplace Platform.</p>
           <div className="flex items-center gap-4">
             <Link to="/about" className="hover:text-slate-300">Cooperative Bylaws</Link>
             <Link to="/about" className="hover:text-slate-300">Privacy Policy</Link>

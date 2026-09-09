@@ -1,85 +1,15 @@
 import { Booking, BookingStatus } from '../types';
-import { INITIAL_BOOKINGS } from '../data/mockData';
-import { simulatedLatency } from './apiClient';
+import { apiRequest } from './apiClient';
 
-// In-memory store initialized from mock data and updated reactively
-let bookingsStore: Booking[] = [...INITIAL_BOOKINGS];
+const skillMap: Record<string,string> = { Electrician:'electrical', Plumber:'plumbing', Carpenter:'carpentry', Painter:'painting', Cleaner:'cleaning', 'Domestic Helper':'domestic helper', Caregiver:'caregiver', Driver:'driving', Gardener:'gardening', Technician:'technician' };
+function currentLocation(){ try { const raw=localStorage.getItem('sahakar_customer_location'); const x=raw?JSON.parse(raw):null; if(Number.isFinite(x?.latitude)&&Number.isFinite(x?.longitude)) return {latitude:x.latitude,longitude:x.longitude}; } catch {} throw new Error('Customer location is required before creating a booking'); }
+function mapBooking(b:any):Booking{ const serviceCategory=Object.keys(skillMap).find(k=>skillMap[k]===String(b.service_type||'').toLowerCase())||'Technician'; return { id:b.id,customerId:b.customer_id,customerName:b.customer_name||'Customer',customerPhone:b.customer_phone||'',customerAddress:b.customer_address||'',workerId:b.worker_id||'',workerName:b.worker_name||'Cooperative Worker',workerPhone:b.worker_phone||'',workerAvatar:b.worker_avatar,cooperativeName:b.cooperative_name||'SahakarGig Cooperative',serviceCategory,serviceTitle:serviceCategory,date:String(b.created_at||'').slice(0,10),timeSlot:'Standard',description:undefined,notes:undefined,isEmergency:Boolean(b.is_emergency),estimatedPrice:b.amount==null?undefined:Number(b.amount),finalPrice:b.amount==null?undefined:Number(b.amount),baseAmount:b.amount==null?undefined:Number(b.amount),welfareFee:undefined,platformFee:undefined,totalAmount:b.amount==null?undefined:Number(b.amount),status:b.status==='accepted'?'Worker Accepted':b.status==='completed'?'Service Completed':b.status==='cancelled'?'Cancelled':'Booking Requested',statusTimeline:[],paymentStatus:'Pending',paymentMethod:undefined,transactionId:undefined,invoiceId:undefined,otp:undefined,createdAt:b.created_at } as Booking; }
 
-export const bookingService = {
-  async getAllBookings(): Promise<Booking[]> {
-    return simulatedLatency([...bookingsStore], 200);
-  },
-
-  async getBookingById(id: string): Promise<Booking | undefined> {
-    const booking = bookingsStore.find((b) => b.id === id);
-    return simulatedLatency(booking, 150);
-  },
-
-  async getCustomerBookings(customerId: string): Promise<Booking[]> {
-    const filtered = bookingsStore.filter((b) => b.customerId === customerId);
-    return simulatedLatency(filtered, 200);
-  },
-
-  async getWorkerBookings(workerId: string): Promise<Booking[]> {
-    const filtered = bookingsStore.filter((b) => b.workerId === workerId);
-    return simulatedLatency(filtered, 200);
-  },
-
-  async createBooking(newBookingData: Omit<Booking, 'id' | 'createdAt' | 'statusTimeline'>): Promise<Booking> {
-    const newBooking: Booking = {
-      ...newBookingData,
-      id: `BK-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-      createdAt: new Date().toISOString(),
-      status: 'Booking Requested',
-      statusTimeline: [
-        {
-          status: 'Booking Requested',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          note: newBookingData.isEmergency ? 'Urgent emergency service dispatched' : 'Standard booking placed'
-        }
-      ],
-      otp: `${Math.floor(1000 + Math.random() * 9000)}`
-    };
-
-    bookingsStore = [newBooking, ...bookingsStore];
-    return simulatedLatency(newBooking, 300);
-  },
-
-  async updateBookingStatus(
-    bookingId: string, 
-    newStatus: BookingStatus, 
-    note?: string
-  ): Promise<Booking> {
-    const index = bookingsStore.findIndex((b) => b.id === bookingId);
-    if (index === -1) {
-      throw new Error(`Booking ${bookingId} not found`);
-    }
-
-    const current = bookingsStore[index];
-    const updated: Booking = {
-      ...current,
-      status: newStatus,
-      statusTimeline: [
-        ...current.statusTimeline,
-        {
-          status: newStatus,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          note: note || `Status updated to ${newStatus}`
-        }
-      ]
-    };
-
-    if (newStatus === 'Payment Completed') {
-      updated.paymentStatus = 'Paid';
-      updated.transactionId = `TXN-SGIG-2026-${Math.floor(10000 + Math.random() * 90000)}`;
-      updated.invoiceId = `INV-2026-${bookingId.split('-')[2] || '0891'}`;
-    }
-
-    bookingsStore[index] = updated;
-    return simulatedLatency(updated, 200);
-  },
-
-  resetMockBookings() {
-    bookingsStore = [...INITIAL_BOOKINGS];
-  }
+export const bookingService={
+ async getAllBookings():Promise<Booking[]>{ const r=await apiRequest<any[]>('/bookings'); return Array.isArray(r.data)?r.data.map(mapBooking):[]; },
+ async getBookingById(id:string):Promise<Booking|undefined>{ const bookings=await this.getAllBookings(); return bookings.find(b=>b.id===id); },
+ async getCustomerBookings(id:string):Promise<Booking[]>{ return (await this.getAllBookings()).filter(b=>b.customerId===id); },
+ async getWorkerBookings(_id:string):Promise<Booking[]>{ return this.getAllBookings(); },
+ async createBooking(data:Omit<Booking,'id'|'createdAt'|'statusTimeline'>):Promise<Booking>{ const loc=currentLocation(); const r=await apiRequest<any>('/bookings/create',{method:'POST',body:JSON.stringify({skill:skillMap[data.serviceCategory]||String(data.serviceCategory).toLowerCase(),workerId:data.workerId||null,latitude:loc.latitude,longitude:loc.longitude,isEmergency:Boolean(data.isEmergency)})}); return mapBooking(r.data); },
+ async updateBookingStatus(id:string,status:BookingStatus,note?:string):Promise<Booking>{ const apiStatus=status==='Worker Accepted'?'accepted':status==='Service Completed'||status==='Payment Completed'?'completed':status==='Cancelled'?'cancelled':'requested'; const r=await apiRequest<any>(`/bookings/${encodeURIComponent(id)}/status`,{method:'PATCH',body:JSON.stringify({status:apiStatus})}); const updated=mapBooking(r.data); updated.status=status; updated.statusTimeline=[{status,timestamp:new Date().toISOString(),note}]; return updated; }
 };

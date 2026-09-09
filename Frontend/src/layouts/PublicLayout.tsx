@@ -8,7 +8,6 @@ import { ToastContainer } from '../components/common/ToastContainer';
 export const PublicLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
-      <DemoBanner />
       <Header />
       <main className="flex-1">
         <Outlet />

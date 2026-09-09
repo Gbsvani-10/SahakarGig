@@ -28,11 +28,11 @@ export const DemoBanner: React.FC = () => {
   return (
     <div className="bg-slate-900 text-slate-100 border-b border-slate-800 px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2 shadow-md relative z-40">
       <div className="flex items-center gap-2">
-        <span className="bg-amber-500 text-slate-950 font-bold px-2 py-0.5 rounded text-[10px] tracking-wider uppercase">
-          SIH 2026 Demo Mode
+        <span className="bg-emerald-600 text-white font-bold px-2 py-0.5 rounded text-[10px] tracking-wider uppercase">
+          SahakarGig Interactive Demo
         </span>
         <span className="hidden md:inline text-slate-300">
-          Problem 26089: Cooperative Gig Services Platform (Ministry of Cooperation / NCCT)
+          Cooperative Digital Marketplace Platform for Household & Community Services
         </span>
       </div>
 
