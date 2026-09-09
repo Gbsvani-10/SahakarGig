@@ -7,7 +7,7 @@ import { Button } from '../../components/common/Button';
 import { SearchBar } from '../../components/common/SearchBar';
 import { Modal } from '../../components/common/Modal';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { ServiceMap } from '../../components/map/ServiceMap';
+import  ServiceMap  from '../../components/map/ServiceMap';
 import { LocationPickerModal } from '../../components/map/LocationPickerModal';
 import { NearbyWorkerCard } from '../../components/map/NearbyWorkerCard';
 import { clientGeoService } from '../../services/geoService';
