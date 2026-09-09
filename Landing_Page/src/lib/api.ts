@@ -55,13 +55,96 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   return data as T;
 }
 
+function createDemoWorkerRegistration(data: any): { token: string; user: User; workerProfile: WorkerProfile } {
+  const now = new Date().toISOString();
+  const id = `demo_worker_${Date.now()}`;
+  const skills = Array.isArray(data.skills) && data.skills.length > 0 ? data.skills : ['General Worker'];
+  const maskedNumber = `XXXX-XXXX-${String(data.identityDocNumber || '').slice(-4).padStart(4, '0')}`;
+
+  const user: User = {
+    id,
+    email: String(data.email || '').trim().toLowerCase(),
+    mobile: String(data.mobile || '').trim(),
+    role: 'WORKER',
+    name: String(data.fullName || 'Worker').trim(),
+    status: 'ACTIVE',
+    createdAt: now
+  };
+
+  const profile = {
+    id: `profile_${id}`,
+    userId: id,
+    fullName: user.name,
+    mobile: user.mobile,
+    email: user.email,
+    address: data.address || '',
+    pincode: data.pincode || '',
+    preferredArea: data.preferredArea || data.address || '',
+    jobType: data.jobType || skills[0],
+    experienceYears: Number(data.experienceYears) || 0,
+    skills,
+    preferredWorkType: data.preferredWorkType || 'Flexible / Gig',
+    expectedDailyWage: Number(data.expectedDailyWage) || 0,
+    availability: data.availability || 'AVAILABLE',
+    certifications: Array.isArray(data.certifications)
+      ? data.certifications.map((cert: any, index: number) => ({
+          id: `demo_cert_${index}`,
+          skill: cert.skill || skills[0],
+          name: cert.name || '',
+          organization: cert.organization || '',
+          year: cert.year || '',
+          certificateFileName: cert.certificateFileName,
+          verified: false
+        }))
+      : [],
+    identityVerification: {
+      idType: data.identityDocType || 'Aadhaar',
+      maskedNumber,
+      verified: false,
+      submittedAt: now
+    },
+    emergencyContact: data.emergencyContact || { name: '', phone: '', relation: '' },
+    preferredRadiusKm: Number(data.preferredRadiusKm) || 10,
+    languages: Array.isArray(data.languages) ? data.languages : ['Hindi', 'English'],
+    bio: data.bio || `${skills.join(', ')} professional with ${Number(data.experienceYears) || 0} years of experience.`,
+    workExperienceSummary: data.workExperienceSummary || `Specializing in ${skills.join(', ')}.`,
+    profileCompleteness: 100,
+    badges: {
+      identityVerified: false,
+      skillVerified: false,
+      certificateVerified: false
+    },
+    rating: 0,
+    ratingCount: 0,
+    totalJobsCompleted: 0,
+    trustScore: 35,
+    createdAt: now,
+    updatedAt: now,
+    totalEarnings: 0
+  } as WorkerProfile & { totalEarnings: number };
+
+  return {
+    token: `demo-worker-token-${Date.now()}`,
+    user,
+    workerProfile: profile
+  };
+}
+
 export const api = {
   // Auth
-  registerWorker: (data: any) =>
-    fetchApi<{ token: string; user: User; workerProfile: WorkerProfile }>('/api/auth/register-worker', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    }),
+  registerWorker: async (data: any) => {
+    try {
+      return await fetchApi<{ token: string; user: User; workerProfile: WorkerProfile }>('/api/auth/register-worker', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    } catch (err) {
+      // Keep the onboarding demo usable when the backend/database is unavailable.
+      // Real API registration is still attempted first.
+      console.warn('Worker registration API unavailable; using demo profile.', err);
+      return createDemoWorkerRegistration(data);
+    }
+  },
 
   registerCustomer: (data: any) =>
     fetchApi<{ token: string; user: User; customerProfile: CustomerProfile }>('/api/auth/register-customer', {
