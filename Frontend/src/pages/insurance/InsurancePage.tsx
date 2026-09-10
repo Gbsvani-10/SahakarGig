@@ -87,8 +87,11 @@ const [insuranceStatus, setInsuranceStatus] =
 useState<InsuranceStatus>('not_enrolled');
 
 const [contributionHistory, setContributionHistory] =
-useState<ContributionHistoryItem[]>([]);
+useState<ContributionHistory
+  history={contributionHistory}
+/>
 
+<div className="flex justify-center">([]);
 const [isLoading, setIsLoading] =
 useState(true);
 
