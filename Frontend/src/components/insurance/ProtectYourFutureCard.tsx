@@ -1,4 +1,4 @@
-```tsx
+
 import React from 'react';
 import { ContributionAmount } from '../../types/insurance';
 import {
@@ -392,4 +392,3 @@ export const ProtectYourFutureCard: React.FC<ProtectYourFutureCardProps> = ({
     </section>
   );
 };
-```
