@@ -571,15 +571,10 @@ return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 spa
 
   {showSimulatorModal && (
     <ProtectionSimulator
-      dailyEarnings={worker.dailyEarnings}
-      workingDays={worker.estimatedWorkingDays}
-      selectedContribution={
-        selectedContribution
-      }
-      onClose={() =>
-        setShowSimulatorModal(false)
-      }
-    />
+  isOpen={showSimulatorModal}
+  selectedContribution={selectedContribution}
+  onClose={() => setShowSimulatorModal(false)}
+/>
   )}
 
   {showClaimSupport && (
@@ -593,21 +588,19 @@ return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 spa
   <InsuranceFAQ />
 
   {showAdjustmentModal &&
-    insuranceRecord && (
-      <IncomeAdjustmentModal
-        currentContribution={
-          getContributionAmount(
-            insuranceRecord.selectedContribution
-          )
-        }
-        onConfirm={
-          handleConfirmAdjustment
-        }
-        onClose={() =>
-          setShowAdjustmentModal(false)
-        }
-      />
-    )}
+  insuranceRecord &&
+  getContributionAmount(insuranceRecord.selectedContribution) !== null && (
+    <IncomeAdjustmentModal
+      isOpen={showAdjustmentModal}
+      currentContribution={
+        getContributionAmount(insuranceRecord.selectedContribution)!
+      }
+      dailyEarnings={worker.dailyEarnings}
+      workingDays={worker.estimatedWorkingDays}
+      onClose={() => setShowAdjustmentModal(false)}
+      onConfirmAdjustment={handleConfirmAdjustment}
+    />
+  )}
 </div>
 
 );
