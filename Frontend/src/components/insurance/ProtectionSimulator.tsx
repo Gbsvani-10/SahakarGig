@@ -90,11 +90,11 @@ Selected Plan: ₹{selectedContribution}/day ({protectionTier}) </span> </div>
                 key={s.id}
                 type="button"
                 onClick={() => setSelectedScenarioId(s.id)}
-                className={p-3 rounded-xl border text-left transition-all flex flex-col items-start justify-between cursor-pointer ${
-                  isSelected
-                    ? 'bg-emerald-50 border-emerald-600 shadow-xs ring-1 ring-emerald-500'
-                    : 'bg-stone-50 hover:bg-stone-100 border-stone-200'
-                }}
+                className={
+isSelected
+? 'p-3 rounded-xl border text-left transition-all flex flex-col items-start justify-between cursor-pointer bg-emerald-50 border-emerald-600 shadow-xs ring-1 ring-emerald-500'
+: 'p-3 rounded-xl border text-left transition-all flex flex-col items-start justify-between cursor-pointer bg-stone-50 hover:bg-stone-100 border-stone-200'
+}
               >
                 <div className="mb-2">{getScenarioIcon(s.id)}</div>
 
