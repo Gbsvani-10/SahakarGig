@@ -1,3 +1,4 @@
+```tsx
 import React, { useState } from 'react';
 import {
   Outlet,
@@ -46,13 +47,11 @@ export const WorkerLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   /*
-   * IMPORTANT:
-   * Find ONLY the worker belonging to the currently
-   * authenticated account.
+   * Find ONLY the worker belonging to the
+   * currently authenticated account.
    *
    * No workers[0]
-   * No work-201
-   * No Ravi Kumar
+   * No hardcoded worker
    * No demo worker
    */
   const currentWorker = workers.find(
@@ -110,11 +109,18 @@ export const WorkerLayout: React.FC = () => {
       path: '/worker/ratings',
       icon: <Star className="w-4 h-4" />,
     },
+
+    /*
+     * STEP 1 CHANGE:
+     * Welfare & Insurance now opens the
+     * integrated Insurance page.
+     */
     {
       label: 'Welfare & Insurance',
-      path: '/worker/welfare',
+      path: '/insurance',
       icon: <HeartPulse className="w-4 h-4" />,
     },
+
     {
       label: 'Notifications',
       path: '/worker/notifications',
@@ -193,6 +199,7 @@ export const WorkerLayout: React.FC = () => {
             >
               <X className="w-5 h-5" />
             </button>
+
           </div>
 
           {/* Duty Status */}
@@ -314,6 +321,7 @@ export const WorkerLayout: React.FC = () => {
             </button>
 
           </div>
+
         </aside>
 
         {/* Main Content */}
@@ -373,6 +381,7 @@ export const WorkerLayout: React.FC = () => {
               </Link>
 
             </div>
+
           </header>
 
           {/* Dashboard Pages */}
@@ -387,3 +396,4 @@ export const WorkerLayout: React.FC = () => {
     </div>
   );
 };
+```
