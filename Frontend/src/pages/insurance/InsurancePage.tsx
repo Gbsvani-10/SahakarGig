@@ -55,27 +55,31 @@ interface InsurancePageProps {
   openClaimOnLoad?: boolean;
 }
 
-const getProtectionTier = (amount: ContributionAmount): string => {
+const getContributionAmount = (
+  amount: number | null | undefined
+): ContributionAmount | null => {
+  if (amount === 10) return 10;
+  if (amount === 20) return 20;
+  if (amount === 30) return 30;
+  return null;
+};
+
+const getProtectionTier = (
+  amount: ContributionAmount
+): string => {
   const option = CONTRIBUTION_OPTIONS.find(
     (item) => item.amount === amount
   );
 
-  return option?.tier || 'Basic';
-};
-
-const getContributionAmount = (
-  amount: number | null | undefined
-): ContributionAmount => {
-  if (amount === 30) return 30;
-  if (amount === 20) return 20;
-  return 10;
+  return option?.tier || 'Data not available';
 };
 
 export const InsurancePage: React.FC<InsurancePageProps> = ({
   onBackToPortal,
   openClaimOnLoad = false,
 }) => {
-  const [worker, setWorker] = useState<InsuranceWorkerData | null>(null);
+  const [worker, setWorker] =
+    useState<InsuranceWorkerData | null>(null);
 
   const [insuranceRecord, setInsuranceRecord] =
     useState<InsuranceRecord | null>(null);
@@ -83,110 +87,139 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
   const [insuranceStatus, setInsuranceStatus] =
     useState<InsuranceStatus>('not_enrolled');
 
-  const [contributionHistory, setContributionHistory] = useState<
-    ContributionHistoryItem[]
-  >([]);
+  const [contributionHistory, setContributionHistory] =
+    useState<ContributionHistoryItem[]>([]);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] =
+    useState(true);
 
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] =
+    useState<string | null>(null);
 
   const [selectedContribution, setSelectedContribution] =
-    useState<ContributionAmount>(10);
+    useState<ContributionAmount | null>(null);
 
-  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isEnrolling, setIsEnrolling] =
+    useState(false);
 
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showConfirmation, setShowConfirmation] =
+    useState(false);
 
-  const [newlyEnrolledRef, setNewlyEnrolledRef] = useState<string | null>(
-    null
-  );
+  const [newlyEnrolledRef, setNewlyEnrolledRef] =
+    useState<string | null>(null);
 
-  const [showSimulatorModal, setShowSimulatorModal] = useState(false);
+  const [showSimulatorModal, setShowSimulatorModal] =
+    useState(false);
 
-  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+  const [showAdjustmentModal, setShowAdjustmentModal] =
+    useState(false);
 
   const [showClaimSupport, setShowClaimSupport] =
     useState(openClaimOnLoad);
 
-  /*
-   * Load the currently authenticated worker's real insurance data.
-   */
   const loadWorkerData = async () => {
     try {
       setIsLoading(true);
       setLoadError(null);
 
       /*
-       * Worker profile comes from the main SahakarGig backend.
-       * No demo worker / fallback worker is used.
+       * All worker information comes from the authenticated
+       * SahakarGig backend.
        */
       const workerProfile =
         (await insuranceApi.getWorkerProfile()) as InsuranceWorkerData;
 
+      if (!workerProfile) {
+        throw new Error(
+          'Worker profile was not found.'
+        );
+      }
+
       setWorker(workerProfile);
 
       /*
-       * Recommendation is calculated only when real earnings
+       * Use recommendation only when real earnings
        * are available.
        */
-      const recommended = getRecommendedContribution(
-        workerProfile.dailyEarnings
-      );
+      const recommended =
+        getRecommendedContribution(
+          workerProfile.dailyEarnings
+        );
 
       if (recommended) {
         setSelectedContribution(
           getContributionAmount(recommended.amount)
         );
+      } else {
+        setSelectedContribution(null);
       }
 
       /*
-       * Current insurance record.
+       * Load the authenticated worker's actual
+       * insurance record.
        */
-      const insurance = await insuranceApi.getInsuranceRecord();
+      const insurance =
+        await insuranceApi.getInsuranceRecord();
 
       setInsuranceRecord(insurance);
 
       if (insurance?.status) {
-        setInsuranceStatus(
-          insurance.status.toLowerCase() as InsuranceStatus
-        );
+        const status =
+          String(insurance.status).toLowerCase();
+
+        if (
+          status === 'active' ||
+          status === 'pending' ||
+          status === 'inactive' ||
+          status === 'not_enrolled'
+        ) {
+          setInsuranceStatus(
+            status as InsuranceStatus
+          );
+        } else {
+          setInsuranceStatus('not_enrolled');
+        }
       } else {
         setInsuranceStatus('not_enrolled');
       }
 
       /*
-       * If worker already selected a contribution,
-       * show that actual value.
+       * If the backend already has a contribution,
+       * display that real contribution.
        */
-      if (
-        insurance?.selectedContribution !== null &&
-        insurance?.selectedContribution !== undefined
-      ) {
+      const existingContribution =
+        getContributionAmount(
+          insurance?.selectedContribution
+        );
+
+      if (existingContribution !== null) {
         setSelectedContribution(
-          getContributionAmount(insurance.selectedContribution)
+          existingContribution
         );
       }
 
       /*
-       * Real contribution ledger.
+       * Load actual contribution history.
        */
       const history =
         await insuranceApi.getContributionHistory();
 
-      setContributionHistory(history);
+      setContributionHistory(
+        Array.isArray(history)
+          ? history
+          : []
+      );
     } catch (error: unknown) {
       console.error(
         'Error loading worker insurance data:',
         error
       );
 
-      const message =
+      setLoadError(
         error instanceof Error
           ? error.message
-          : 'Unable to load your insurance information.';
-
-      setLoadError(message);
+          : 'Unable to load your insurance information.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -196,39 +229,459 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
     loadWorkerData();
   }, []);
 
-  /*
-   * Recommended contribution for this actual worker.
-   */
   const recommendedAmount = useMemo(() => {
-    return getRecommendedContribution(worker?.dailyEarnings);
+    return getRecommendedContribution(
+      worker?.dailyEarnings
+    );
   }, [worker?.dailyEarnings]);
 
-  /*
-   * Whether this worker already has an insurance record.
-   */
   const isEnrolled =
     insuranceStatus === 'active' ||
     insuranceStatus === 'pending' ||
     insuranceRecord !== null;
 
   /*
-   * Enrollment.
+   * Confirm insurance enrollment.
    */
   const handleConfirmEnrollment = async () => {
     if (!worker) return;
 
+    if (selectedContribution === null) {
+      alert(
+        'Please select a valid contribution amount.'
+      );
+      return;
+    }
+
     try {
       setIsEnrolling(true);
 
-      const result = await insuranceApi.enrollInsurance(
-        selectedContribution,
-        true
-      );
+      const result =
+        await insuranceApi.enrollInsurance(
+          selectedContribution,
+          true
+        );
 
       setInsuranceRecord(result);
-
       setInsuranceStatus('active');
 
       /*
-       * Use only the reference
+       * Use ONLY the reference returned by backend.
+       * Never generate a fake reference on the frontend.
+       */
+      setNewlyEnrolledRef(
+        result?.referenceCode ||
+          result?.reference_code ||
+          null
+      );
+
+      setShowConfirmation(true);
+
+      const history =
+        await insuranceApi.getContributionHistory();
+
+      setContributionHistory(
+        Array.isArray(history)
+          ? history
+          : []
+      );
+    } catch (error: unknown) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to confirm insurance.'
+      );
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
+
+  /*
+   * Change the worker's contribution.
+   */
+  const handleConfirmAdjustment = async (
+    newAmount: ContributionAmount,
+    reason: string
+  ) => {
+    try {
+      const updated =
+        await insuranceApi.adjustContribution(
+          newAmount,
+          reason,
+          true
+        );
+
+      setInsuranceRecord(updated);
+      setSelectedContribution(newAmount);
+
+      const history =
+        await insuranceApi.getContributionHistory();
+
+      setContributionHistory(
+        Array.isArray(history)
+          ? history
+          : []
+      );
+
+      alert(
+        `Contribution updated to ₹${newAmount}/day.`
+      );
+    } catch (error: unknown) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update contribution.'
+      );
+    }
+  };
+
+  /*
+   * Loading state.
+   */
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-4">
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-700 mx-auto" />
+
+        <h3 className="text-lg font-bold text-stone-800">
+          Loading your insurance information...
+        </h3>
+
+        <p className="text-xs text-stone-500">
+          Connecting to SahakarGig secure welfare ledger
+        </p>
+      </div>
+    );
+  }
+
+  /*
+   * Error state.
+   */
+  if (loadError || !worker) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+
+        <h3 className="text-xl font-bold text-stone-900">
+          Unable to load your insurance information.
+        </h3>
+
+        <p className="text-xs text-stone-600 leading-relaxed">
+          {loadError ||
+            'Worker profile data is not available.'}
+        </p>
+
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={loadWorkerData}
+            className="px-5 py-2.5 rounded-xl bg-stone-900 text-amber-400 font-bold text-xs flex items-center gap-1.5 hover:bg-stone-800"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Try Again</span>
+          </button>
+
+          {onBackToPortal && (
+            <button
+              type="button"
+              onClick={onBackToPortal}
+              className="px-5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+            >
+              ← Back to Worker Portal
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 animate-in fade-in duration-200">
+
+      {/* Back / Breadcrumb */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/80 pb-4">
+        {onBackToPortal && (
+          <button
+            type="button"
+            id="back-to-worker-portal-btn"
+            onClick={onBackToPortal}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-stone-700 hover:text-stone-950 transition-colors group self-start"
+          >
+            <div className="w-8 h-8 rounded-xl bg-stone-100 group-hover:bg-stone-200 flex items-center justify-center">
+              <ArrowLeft className="w-4 h-4 text-stone-700" />
+            </div>
+
+            <span>
+              ← Back to Worker Portal
+            </span>
+          </button>
+        )}
+
+        <div className="flex items-center gap-2 text-xs text-stone-500 font-medium self-start sm:self-auto">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span>
+            SahakarGig Worker Welfare • /insurance
+          </span>
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="space-y-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-stone-950 shadow-xs">
+          <Shield className="w-3.5 h-3.5 text-stone-950 stroke-[2.5]" />
+          <span>Micro-Insurance Module</span>
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-900 tracking-tight">
+          Protect Your Future 🛡️
+        </h1>
+
+        <p className="text-sm sm:text-base text-stone-600 font-medium">
+          Small contribution. Meaningful protection.
+        </p>
+      </div>
+
+      {/* Real worker earnings */}
+      <EarningsCard worker={worker} />
+
+      {/* Contribution / protection */}
+      <ProtectYourFutureCard
+        dailyWage={worker.dailyEarnings}
+        selectedContribution={selectedContribution}
+        onSelectContribution={(amount) =>
+          setSelectedContribution(amount)
+        }
+        onConfirmInsurance={
+          handleConfirmEnrollment
+        }
+        isEnrolling={isEnrolling}
+        isEnrolled={isEnrolled}
+      />
+
+      {/* Confirmation */}
+      {showConfirmation &&
+        newlyEnrolledRef &&
+        selectedContribution !== null && (
+          <ConfirmationScreen
+            referenceId={newlyEnrolledRef}
+            selectedContribution={
+              selectedContribution
+            }
+            protectionTier={getProtectionTier(
+              selectedContribution
+            )}
+            onGoToDashboard={() => {
+              setShowConfirmation(false);
+
+              const element =
+                document.getElementById(
+                  'active-insurance-dashboard'
+                );
+
+              element?.scrollIntoView({
+                behavior: 'smooth',
+              });
+            }}
+            onBackToPortal={
+              onBackToPortal
+            }
+            workingDays={
+              worker.estimatedWorkingDays
+            }
+          />
+        )}
+
+      {/* Active insurance */}
+      {isEnrolled && insuranceRecord ? (
+        <div
+          id="active-insurance-dashboard"
+          className="space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-stone-900">
+              Your Active Micro-Insurance
+            </h2>
+
+            <span className="text-xs text-emerald-800 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              Synced with SahakarGig Database
+            </span>
+          </div>
+
+          <ActiveInsuranceDashboard
+            insurance={insuranceRecord}
+            onManageContribution={() =>
+              setShowAdjustmentModal(true)
+            }
+            onClaimSupport={() =>
+              setShowClaimSupport(true)
+            }
+            workingDays={
+              worker.estimatedWorkingDays
+            }
+          />
+        </div>
+      ) : (
+        <div
+          id="not-enrolled-banner"
+          className="p-5 rounded-2xl bg-stone-50 border-2 border-stone-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold shrink-0">
+              <Clock className="w-6 h-6 text-amber-700" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-stone-900">
+                You are not enrolled in an insurance plan yet.
+              </h3>
+
+              <p className="text-xs text-stone-600 mt-0.5 leading-relaxed">
+                Choose an available daily contribution
+                amount below to activate the protection
+                available through SahakarGig.
+              </p>
+            </div>
+          </div>
+
+          <a
+            href="#daily-contribution-selector"
+            className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shrink-0 text-center transition-colors shadow-xs"
+          >
+            Select Contribution Below ↓
+          </a>
+        </div>
+      )}
+
+      {/* Recommendation */}
+      <RecommendationCard
+        dailyEarnings={worker.dailyEarnings}
+        recommendedAmount={recommendedAmount}
+        selectedAmount={selectedContribution}
+        onApplyRecommendation={(amount) =>
+          setSelectedContribution(amount)
+        }
+        workingDays={
+          worker.estimatedWorkingDays
+        }
+      />
+
+      {/* Contribution selector */}
+      <div id="daily-contribution-selector">
+        <ContributionSelector
+          selectedAmount={selectedContribution}
+          onSelectAmount={(amount) =>
+            setSelectedContribution(amount)
+          }
+          recommendedAmount={
+            recommendedAmount
+          }
+          dailyEarnings={
+            worker.dailyEarnings
+          }
+          workingDays={
+            worker.estimatedWorkingDays
+          }
+        />
+      </div>
+
+      {/* Emergency protection */}
+      <EmergencyShield
+        selectedContribution={
+          selectedContribution
+        }
+      />
+
+      {/* Protection overview */}
+      <ProtectionOverview
+        selectedContribution={
+          selectedContribution
+        }
+        onOpenSimulator={() =>
+          setShowSimulatorModal(true)
+        }
+      />
+
+      {/* Income-aware protection */}
+      <IncomeAwareProtection
+        onOpenAdjustmentModal={() =>
+          setShowAdjustmentModal(true)
+        }
+      />
+
+      {/* Insurance summary */}
+      <InsuranceSummary
+        worker={worker}
+        selectedContribution={
+          selectedContribution
+        }
+        onConfirmEnrollment={
+          handleConfirmEnrollment
+        }
+        isSubmitting={isEnrolling}
+      />
+
+      {/* Contribution history */}
+      <ContributionHistory
+        history={contributionHistory}
+        isLoading={false}
+      />
+
+      {/* Claim support */}
+      {showClaimSupport && (
+        <ClaimSupport />
+      )}
+
+      {!showClaimSupport && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() =>
+              setShowClaimSupport(true)
+            }
+            className="px-5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+          >
+            Open Claim Support
+          </button>
+        </div>
+      )}
+
+      {/* FAQ */}
+      <InsuranceFAQ />
+
+      {/* Protection simulator */}
+      <ProtectionSimulator
+        isOpen={showSimulatorModal}
+        onClose={() =>
+          setShowSimulatorModal(false)
+        }
+        selectedContribution={
+          selectedContribution
+        }
+      />
+
+      {/* Contribution adjustment */}
+      <IncomeAdjustmentModal
+        isOpen={showAdjustmentModal}
+        onClose={() =>
+          setShowAdjustmentModal(false)
+        }
+        currentContribution={
+          insuranceRecord?.selectedContribution ??
+          selectedContribution
+        }
+        dailyEarnings={
+          worker.dailyEarnings
+        }
+        onConfirmAdjustment={
+          handleConfirmAdjustment
+        }
+        workingDays={
+          worker.estimatedWorkingDays
+        }
+      />
+    </div>
+  );
+};
 ```
