@@ -532,28 +532,27 @@ return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 spa
   workingDays={worker.estimatedWorkingDays}
 />
 
-  <ProtectionOverview />
+ <ProtectionOverview
+  selectedContribution={selectedContribution}
+/>
 
+  {selectedContribution !== null && (
   <IncomeAwareProtection
-    dailyEarnings={
-      worker.dailyEarnings
-    }
-    workingDays={
-      worker.estimatedWorkingDays
+    currentContribution={selectedContribution}
+    onOpenAdjustment={() =>
+      setShowAdjustmentModal(true)
     }
   />
+)}
 
-  <EmergencyShield />
-
-  <InsuranceSummary
-    insurance={insuranceRecord}
-    selectedContribution={
-      selectedContribution
-    }
-    workingDays={
-      worker.estimatedWorkingDays
+ {selectedContribution !== null && (
+  <EmergencyShield
+    selectedContribution={selectedContribution}
+    onSelectContribution={(amount) =>
+      setSelectedContribution(amount)
     }
   />
+)}
 
   <ContributionHistory
     history={contributionHistory}
