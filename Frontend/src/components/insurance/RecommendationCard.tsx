@@ -1,165 +1,121 @@
-
 import React from 'react';
+import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { ContributionAmount } from '../../types/insurance';
 import {
-  getRecommendationExplanation,
-  calculateMonthlyContribution,
+CONTRIBUTION_OPTIONS,
+calculateMonthlyContribution,
+getRecommendationExplanation,
 } from '../../utils/insuranceCalculations';
-import {
-  Sparkles,
-  CheckCircle2,
-  ArrowRight,
-  ShieldCheck,
-  AlertCircle,
-} from 'lucide-react';
 
 interface RecommendationCardProps {
-  dailyEarnings: number | null;
-  recommendedAmount: ContributionAmount | null;
-  selectedAmount: ContributionAmount | null;
-  onApplyRecommendation: (amount: ContributionAmount) => void;
-  workingDays?: number | null;
+recommendedAmount: ContributionAmount | null;
+dailyEarnings?: number | null;
+workingDays?: number | null;
+onApplyRecommendation: (amount: ContributionAmount) => void;
 }
 
-export const RecommendationCard: React.FC<RecommendationCardProps> = ({
-  dailyEarnings,
-  recommendedAmount,
-  selectedAmount,
-  onApplyRecommendation,
-  workingDays,
+const RecommendationCard: React.FC<RecommendationCardProps> = ({
+recommendedAmount,
+dailyEarnings,
+workingDays,
+onApplyRecommendation,
 }) => {
-  const hasEarnings =
-    dailyEarnings !== null &&
-    dailyEarnings !== undefined &&
-    dailyEarnings > 0;
+if (recommendedAmount === null) {
+return ( <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"> <div className="flex items-center gap-3"> <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center"> <Sparkles size={20} className="text-gray-700" /> </div>
 
-  const hasWorkingDays =
-    workingDays !== null &&
-    workingDays !== undefined &&
-    workingDays >= 0;
-
-  const hasRecommendation =
-    recommendedAmount !== null &&
-    recommendedAmount !== undefined;
-
-  const isCurrentlySelected =
-    hasRecommendation &&
-    selectedAmount === recommendedAmount;
-
-  const explanation = hasRecommendation
-    ? getRecommendationExplanation(dailyEarnings, recommendedAmount)
-    : null;
-
-  const monthlyAmount =
-    hasRecommendation && hasWorkingDays
-      ? calculateMonthlyContribution(
-          recommendedAmount,
-          workingDays
-        )
-      : null;
-
-  return (
-    <div
-      id="smart-recommendation-card"
-      className="rounded-2xl bg-gradient-to-r from-amber-50 via-emerald-50 to-teal-50/60 border-2 border-amber-300/80 p-5 sm:p-6 shadow-xs relative overflow-hidden"
-    >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-
-        <div className="flex items-start gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-amber-400 text-stone-950 flex items-center justify-center font-bold shrink-0 shadow-xs">
-            <Sparkles className="w-6 h-6 text-stone-950" />
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-full">
-                Income-Calibrated Recommendation
-              </span>
-
-              {hasEarnings && (
-                <span className="text-xs text-stone-600 font-medium">
-                  Based on verified ₹
-                  {dailyEarnings!.toLocaleString('en-IN')}
-                  /day wage
-                </span>
-              )}
-            </div>
-
-            {hasRecommendation && explanation ? (
-              <>
-                <h3 className="text-lg sm:text-xl font-black text-stone-900 mt-1">
-                  Recommended: ₹{recommendedAmount} / day (
-                  {explanation.tierName})
-                </h3>
-
-                <p className="text-xs sm:text-sm text-stone-700 mt-1 leading-relaxed max-w-2xl">
-                  {explanation.rationale}
-                </p>
-
-                <div className="flex items-center gap-3 text-xs text-stone-600 font-medium mt-2 flex-wrap">
-
-                  <span className="inline-flex items-center gap-1 text-emerald-800 font-bold">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-
-                    {monthlyAmount !== null
-                      ? `~₹${monthlyAmount.toLocaleString('en-IN')}/month based on recorded days`
-                      : 'Monthly estimate unavailable'}
-                  </span>
-
-                  <span>•</span>
-
-                  <span className="text-stone-500">
-                    {explanation.percentageNote}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="text-lg sm:text-xl font-black text-stone-900 mt-1 flex items-center gap-2">
-                  Recommendation unavailable
-                </h3>
-
-                <p className="text-xs sm:text-sm text-stone-700 mt-1 leading-relaxed max-w-2xl flex items-center gap-1.5">
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                  A verified daily earnings record is required to calculate
-                  an income-based recommendation.
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="w-full sm:w-auto shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-stone-200/80">
-
-          {isCurrentlySelected ? (
-            <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-300">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-              <span>Currently Selected</span>
-            </div>
-          ) : hasRecommendation ? (
-            <button
-              type="button"
-              id="apply-recommendation-btn"
-              onClick={() =>
-                onApplyRecommendation(recommendedAmount!)
-              }
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs sm:text-sm transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <span>
-                Switch to ₹{recommendedAmount}/day
-              </span>
-
-              <ArrowRight className="w-4 h-4 text-amber-400" />
-            </button>
-          ) : null}
-
-          {hasRecommendation && (
-            <span className="text-[11px] text-stone-500 hidden sm:block">
-              You are always free to choose another tier
-            </span>
-          )}
-        </div>
+      <div>
+        <h2 className="text-lg font-bold text-gray-900">
+          Contribution Recommendation
+        </h2>
+        <p className="text-sm text-gray-600 mt-1">
+          Recommendation will appear once verified earnings data is available.
+        </p>
       </div>
     </div>
-  );
-};
+  </section>
+);
+
+
+}
+
+const recommendedOption = CONTRIBUTION_OPTIONS.find(
+(option) => option.amount === recommendedAmount
+);
+
+if (!recommendedOption) {
+return null;
+}
+
+const monthlyContribution = calculateMonthlyContribution(
+recommendedAmount,
+workingDays
+);
+
+const explanation = getRecommendationExplanation(
+dailyEarnings,
+recommendedAmount
+);
+
+return ( <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"> <div className="flex items-start gap-4"> <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center shrink-0"> <Sparkles size={22} className="text-gray-700" /> </div>
+
+    <div className="flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">
+            Recommended Contribution
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Based on your verified earnings and working pattern.
+          </p>
+        </div>
+
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-800 text-sm font-semibold">
+          <CheckCircle2 size={16} />
+          {recommendedOption.tier}
+        </span>
+      </div>
+
+      <div className="mt-5 rounded-xl border border-gray-200 p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-sm text-gray-600">
+              Suggested daily contribution
+            </p>
+
+            <p className="text-3xl font-bold text-gray-900 mt-1">
+              ₹{recommendedOption.amount}
+              <span className="text-base font-medium text-gray-500">
+                /day
+              </span>
+            </p>
+          </div>
+
+          {monthlyContribution !== null && (
+            <div className="text-left sm:text-right">
+              <p className="text-sm text-gray-600">
+                Estimated monthly contribution
+              </p>
+
+              <p className="text-xl font-bold text-gray-900 mt-1">
+                ₹{monthlyContribution}
+              </p>
+
+              <p className="text-xs text-gray-500 mt-1">
+                Based on {workingDays} working days
+              </p>
+            </div>
+          )}
+        </div>
+
+        <p className="text-sm text-gray-600 mt-4 leading-6">
+          {explanation}
+        </p>
+
+        <p className="text-sm text-gray-600 mt-2 leading-6">
+          {recommendedOption.description}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => onApplyRecommendation(recommendedAmount)}
+          className="mt-5 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gray-900 text
