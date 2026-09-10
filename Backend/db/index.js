@@ -925,6 +925,139 @@ async function ensureRegistrationSchema() {
     ALTER TABLE customer_profiles
       ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP
       DEFAULT CURRENT_TIMESTAMP;
+          /*
+    ============================================================
+    INSURANCE RECORDS
+    ============================================================
+    */
+
+    CREATE TABLE IF NOT EXISTS insurance_records (
+      id UUID PRIMARY KEY
+        DEFAULT uuid_generate_v4(),
+
+      worker_id UUID UNIQUE NOT NULL
+        REFERENCES workers(id)
+        ON DELETE CASCADE,
+
+      status VARCHAR(30)
+        NOT NULL
+        DEFAULT 'ACTIVE',
+
+      selected_contribution NUMERIC(10,2)
+        NOT NULL
+        DEFAULT 0,
+
+      tier VARCHAR(50),
+
+      reference VARCHAR(100)
+        UNIQUE,
+
+      policy VARCHAR(100),
+
+      enrolled_at TIMESTAMP
+        DEFAULT CURRENT_TIMESTAMP,
+
+      consent BOOLEAN
+        NOT NULL
+        DEFAULT FALSE,
+
+      coverage_details JSONB
+        DEFAULT '{}'::jsonb,
+
+      created_at TIMESTAMP
+        DEFAULT CURRENT_TIMESTAMP,
+
+      updated_at TIMESTAMP
+        DEFAULT CURRENT_TIMESTAMP
+    );
+
+
+    /*
+    ============================================================
+    INSURANCE CONTRIBUTION HISTORY
+    ============================================================
+    */
+
+    CREATE TABLE IF NOT EXISTS insurance_contributions (
+      id UUID PRIMARY KEY
+        DEFAULT uuid_generate_v4(),
+
+      worker_id UUID NOT NULL
+        REFERENCES workers(id)
+        ON DELETE CASCADE,
+
+      insurance_record_id UUID
+        REFERENCES insurance_records(id)
+        ON DELETE CASCADE,
+
+      amount NUMERIC(10,2)
+        NOT NULL
+        DEFAULT 0,
+
+      status VARCHAR(30)
+        NOT NULL
+        DEFAULT 'PAID',
+
+      contribution_date TIMESTAMP
+        DEFAULT CURRENT_TIMESTAMP,
+
+      created_at TIMESTAMP
+        DEFAULT CURRENT_TIMESTAMP
+    );
+
+
+    /*
+    ============================================================
+    INSURANCE CLAIMS
+    ============================================================
+    */
+
+    CREATE TABLE IF NOT EXISTS insurance_claims (
+      id UUID PRIMARY KEY
+        DEFAULT uuid_generate_v4(),
+
+      worker_id UUID NOT NULL
+        REFERENCES workers(id)
+        ON DELETE CASCADE,
+
+      insurance_record_id UUID
+        REFERENCES insurance_records(id)
+        ON DELETE CASCADE,
+
+      claim_type VARCHAR(100)
+        NOT NULL,
+
+      description TEXT
+        NOT NULL,
+
+      amount NUMERIC(10,2),
+
+      status VARCHAR(30)
+        NOT NULL
+        DEFAULT 'SUBMITTED',
+
+      created_at TIMESTAMP
+        DEFAULT CURRENT_TIMESTAMP,
+
+      updated_at TIMESTAMP
+        DEFAULT CURRENT_TIMESTAMP
+    );
+
+
+    /*
+    ============================================================
+    INSURANCE INDEXES
+    ============================================================
+    */
+
+    CREATE INDEX IF NOT EXISTS idx_insurance_records_worker
+      ON insurance_records(worker_id);
+
+    CREATE INDEX IF NOT EXISTS idx_insurance_contributions_worker
+      ON insurance_contributions(worker_id);
+
+    CREATE INDEX IF NOT EXISTS idx_insurance_claims_worker
+      ON insurance_claims(worker_id);
   `);
 
   console.log(
