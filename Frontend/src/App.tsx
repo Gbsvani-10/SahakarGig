@@ -1,3 +1,4 @@
+```tsx
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -153,4 +154,247 @@ export default function App() {
                     }
                   >
                     <Route
-                     
+                      index
+                      element={<Navigate to="/customer/dashboard" replace />}
+                    />
+
+                    <Route
+                      path="dashboard"
+                      element={<CustomerDashboard />}
+                    />
+
+                    <Route
+                      path="services"
+                      element={<CustomerServices />}
+                    />
+
+                    <Route
+                      path="workers"
+                      element={<CustomerWorkers />}
+                    />
+
+                    <Route
+                      path="booking"
+                      element={<CustomerBookingFlow />}
+                    />
+
+                    <Route
+                      path="bookings"
+                      element={<CustomerBookings />}
+                    />
+
+                    <Route
+                      path="emergency"
+                      element={<CustomerEmergency />}
+                    />
+
+                    <Route
+                      path="payments"
+                      element={<CustomerPayments />}
+                    />
+
+                    <Route
+                      path="invoices"
+                      element={<CustomerInvoices />}
+                    />
+
+                    <Route
+                      path="ratings"
+                      element={<CustomerRatings />}
+                    />
+
+                    <Route
+                      path="profile"
+                      element={<CustomerProfile />}
+                    />
+
+                    <Route
+                      path="settings"
+                      element={<CustomerSettings />}
+                    />
+
+                    <Route
+                      path="*"
+                      element={<Navigate to="/customer/dashboard" replace />}
+                    />
+                  </Route>
+
+
+                  {/* =========================
+                      WORKER
+                  ========================== */}
+
+                  <Route
+                    path="/worker"
+                    element={
+                      <ProtectedRoute roles={['worker']}>
+                        <WorkerLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route
+                      index
+                      element={<Navigate to="/worker/dashboard" replace />}
+                    />
+
+                    <Route
+                      path="dashboard"
+                      element={<WorkerDashboard />}
+                    />
+
+                    <Route
+                      path="active-job"
+                      element={<WorkerActiveJob />}
+                    />
+
+                    <Route
+                      path="jobs"
+                      element={<WorkerJobs />}
+                    />
+
+                    <Route
+                      path="availability"
+                      element={<WorkerAvailability />}
+                    />
+
+                    <Route
+                      path="skills"
+                      element={<WorkerSkills />}
+                    />
+
+                    <Route
+                      path="certifications"
+                      element={<WorkerCertifications />}
+                    />
+
+                    <Route
+                      path="earnings"
+                      element={<WorkerEarnings />}
+                    />
+
+                    <Route
+                      path="welfare"
+                      element={<WorkerWelfare />}
+                    />
+
+                    {/* Welfare & Insurance */}
+                    <Route
+                      path="insurance"
+                      element={<InsurancePage />}
+                    />
+
+                    <Route
+                      path="ratings"
+                      element={<WorkerRatings />}
+                    />
+
+                    <Route
+                      path="profile"
+                      element={<WorkerProfile />}
+                    />
+
+                    <Route
+                      path="notifications"
+                      element={<WorkerNotifications />}
+                    />
+
+                    <Route
+                      path="settings"
+                      element={<WorkerSettings />}
+                    />
+
+                    <Route
+                      path="*"
+                      element={<Navigate to="/worker/dashboard" replace />}
+                    />
+                  </Route>
+
+
+                  {/* =========================
+                      ADMIN
+                  ========================== */}
+
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute roles={['admin']}>
+                        <AdminLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route
+                      index
+                      element={<Navigate to="/admin/dashboard" replace />}
+                    />
+
+                    <Route
+                      path="dashboard"
+                      element={<AdminDashboard />}
+                    />
+
+                    <Route
+                      path="cooperatives"
+                      element={<AdminCooperatives />}
+                    />
+
+                    <Route
+                      path="workers"
+                      element={<AdminWorkers />}
+                    />
+
+                    <Route
+                      path="bookings"
+                      element={<AdminBookings />}
+                    />
+
+                    <Route
+                      path="emergency"
+                      element={<AdminEmergency />}
+                    />
+
+                    <Route
+                      path="welfare"
+                      element={<AdminWelfare />}
+                    />
+
+                    <Route
+                      path="reports"
+                      element={<AdminReports />}
+                    />
+
+                    <Route
+                      path="settings"
+                      element={<AdminSettings />}
+                    />
+
+                    <Route
+                      path="*"
+                      element={<Navigate to="/admin/dashboard" replace />}
+                    />
+                  </Route>
+
+
+                  {/* =========================
+                      FALLBACK
+                  ========================== */}
+
+                  <Route
+                    path="*"
+                    element={<Navigate to="/" replace />}
+                  />
+
+                </Routes>
+
+              </div>
+
+              <ToastContainer />
+
+            </div>
+
+          </AppProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </BrowserRouter>
+  );
+}
+```
