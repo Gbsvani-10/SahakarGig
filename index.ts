@@ -1,188 +1,54 @@
-/**
- * Core domain types for SahakarGig AI Demand Forecasting and Fair Work Allocation System
- */
+export type UserRole = 'customer' | 'worker' | 'admin' | 'guest';
 
-export interface Worker {
+export type LanguageCode = 'en' | 'hi' | 'te';
+
+export interface User {
   id: string;
   name: string;
-  avatar?: string;
+  email: string;
   phone: string;
-  skills: string[];
-  certifications: string[];
-  rating: number;
-  reviewCount: number;
-  latitude: number;
-  longitude: number;
-  serviceArea: string;
-  availability: 'available' | 'busy' | 'unavailable';
-  availableHours: number;
-  activeJobs: number;
-  weeklyJobs: number;
-  weeklyEarnings: number; // in INR (₹)
-  totalJobs: number;
-  verified: boolean;
-  suspended?: boolean;
-  joinedDate: string;
+  role: UserRole;
+  avatarUrl?: string;
+  cooperativeId?: string;
+  cooperativeName?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  joinedDate?: string;
 }
 
-export interface Job {
+export type ServiceCategory = 'Electrician' | 'Plumber' | 'Carpenter' | 'Painter' | 'Cleaner' | 'Domestic Helper' | 'Caregiver' | 'Driver' | 'Gardener' | 'Technician';
+
+export interface CooperativeInfo { id: string; name: string; registrationNumber: string; district?: string; state: string; city?: string; address?: string; establishedYear?: number; affiliatedFederation?: string; totalMembers?: number; totalWorkers?: number; activeWorkers?: number; completedJobs?: number; welfareFundBalance?: number; verificationStatus?: string; serviceCategories?: string[]; bylawsDocumentUrl?: string; presidentName?: string; secretaryName?: string; contactPerson?: string; contactPhone?: string; contactEmail?: string; rating?: number; }
+export interface ServiceItem { id: string; name: string; category: ServiceCategory; description: string; iconName: string; basePrice: number; priceRange: string; durationMinutes: number; popular?: boolean; emergencyAvailable?: boolean; inclusions: string[]; }
+export interface WorkerSkill { id: string; category: ServiceCategory; name: string; yearsExperience: number; level: 'Beginner' | 'Intermediate' | 'Advanced' | 'Master'; verificationStatus: 'Verified' | 'Pending' | 'Rejected'; certifiedBy?: string; }
+export interface WorkerCertification { id: string; name: string; issuingOrganization: string; issueDate: string; expiryDate?: string; verificationStatus: 'Verified' | 'Pending' | 'Rejected'; certificateNumber: string; documentUrl?: string; }
+export interface WeeklyScheduleDay { day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'; enabled: boolean; start: string; end: string; }
+export interface WorkerProfile { id: string; userId: string; name: string; phone: string; email: string; avatarUrl: string; primaryCategory: ServiceCategory; cooperativeId: string; cooperativeName: string; cooperativeMembershipId?: string; experienceYears: number; rating: number; reviewCount: number; completedJobsCount: number; verificationStatus: 'Verified' | 'Pending' | 'Suspended'; isAvailable: boolean; availabilityStatus: 'Available' | 'Busy' | 'Offline'; emergencyAvailable: boolean; distanceKm: number; serviceArea: string; hourlyRate: number; priceRange: string; skills: WorkerSkill[]; certifications: WorkerCertification[]; schedule: WeeklyScheduleDay[]; latitude?: number; longitude?: number; locationAccuracy?: number; locationUpdatedAt?: string; locationAddress?: string; serviceRadiusKm?: number; bankDetails?: { accountName: string; accountNumber: string; ifsc: string; upiId: string; }; welfareStatus: { insuranceActive: boolean; policyNumber: string; validUntil: string; schemeName: string; }; }
+export interface NearbyServiceSearchQuery { latitude: number; longitude: number; service?: string; radiusKm?: number; availableOnly?: boolean; minRating?: number; }
+export interface NearbyWorkerResult { worker: WorkerProfile; distanceKm: number; matchScore: number; }
+export interface WorkerLocationUpdatePayload { workerId?: string; latitude: number; longitude: number; locationAccuracy?: number; locationAddress?: string; serviceRadiusKm?: number; }
+export type BookingStatus = 'Booking Requested' | 'Booked' | 'Worker Assigned' | 'Worker Accepted' | 'Worker On The Way' | 'On the Way' | 'Arrived' | 'Service Started' | 'In Progress' | 'Service Completed' | 'Payment Completed' | 'Cancelled';
+export interface Booking { id: string; customerId: string; customerName: string; customerPhone: string; customerAddress: string; workerId: string; workerName: string; workerPhone: string; workerAvatar?: string; cooperativeName: string; serviceCategory: ServiceCategory; serviceTitle: string; date: string; timeSlot: string; description?: string; notes?: string; isEmergency: boolean; estimatedPrice?: number; finalPrice?: number; baseAmount?: number; welfareFee?: number; platformFee?: number; totalAmount?: number; status?: BookingStatus; statusTimeline: { status: BookingStatus; timestamp: string; note?: string; }[]; paymentStatus?: 'Pending' | 'Paid' | 'Refunded'; paymentMethod?: 'UPI' | 'Card' | 'Net Banking' | 'Cash to Cooperative Agent'; transactionId?: string; invoiceId?: string; otp?: string; createdAt: string; }
+export type Worker = WorkerProfile;
+export type Cooperative = CooperativeInfo & { city?: string; totalWorkers?: number; completedJobs?: number; welfareFundBalance?: number; verificationStatus?: string; serviceCategories?: string[]; bylawsDocumentUrl?: string; presidentName?: string; secretaryName?: string; contactEmail?: string; address?: string; };
+export interface Review { id: string; bookingId: string; customerId: string; customerName: string; workerId: string; workerName: string; rating: number; comment: string; date: string; serviceCategory: ServiceCategory; }
+export interface WelfareScheme { id: string; name: string; type: 'Insurance' | 'Health' | 'Pension' | 'Education' | 'Tool Subsidy'; provider: string; description: string; coverageAmount: string; eligibility: string; subsidyPercentage: number; status: 'Active' | 'Upcoming'; }
+export interface WelfareClaim { id: string; workerId: string; workerName: string; schemeId: string; schemeName: string; claimAmount: number; status: 'Submitted' | 'Under Review' | 'Approved' | 'Disbursed' | 'Rejected'; submissionDate: string; approvalDate?: string; remarks?: string; }
+export interface Complaint { id: string; bookingId: string; customerId: string; customerName: string; workerId: string; workerName: string; category: 'Quality of Work' | 'Pricing Issue' | 'Worker Delay' | 'Behavior' | 'Cancellation'; priority: 'High' | 'Medium' | 'Low'; status: 'Open' | 'Under Review' | 'Resolved' | 'Rejected'; description: string; createdAt: string; resolutionNotes?: string; }
+export interface DemandForecastItem { service: ServiceCategory; currentDemandScore: number; forecastDemandScore: number; percentageChange: number; projectedWorkersNeeded: number; availableWorkers: number; shortfallOrSurplus: number; seasonalTrendNote: string; priorityAction: string; }
+
+export interface NotificationItem {
   id: string;
+  recipientUserId?: string;
+  recipientRole: UserRole;
   title: string;
-  service: string;
-  category: string;
-  requiredSkills: string[];
-  latitude: number;
-  longitude: number;
-  location: string;
-  customerName: string;
-  customerPhone?: string;
-  scheduledTime: string;
-  status: 'pending' | 'allocated' | 'in_progress' | 'completed' | 'cancelled';
-  estimatedValue: number;
-  urgency: 'high' | 'medium' | 'standard';
-  assignedWorkerId?: string;
-  createdAt: string;
-}
-
-export interface DemandRecord {
-  id: string;
-  date: string;
-  dayOfWeek: string;
-  service: string;
-  location: string;
-  timeSlot?: 'morning' | 'afternoon' | 'evening' | 'night';
-  requests: number;
-  completed: number;
-  cancelled: number;
-  avgResponseTimeMinutes: number;
-  isHolidayOrWeekend: boolean;
-  weatherCondition?: string;
-}
-
-export type DemandLevel = 'Critical' | 'High' | 'Medium' | 'Low';
-
-export interface DailyForecastPoint {
-  date: string;
-  day: string;
-  predicted: number;
-  confidenceLow: number;
-  confidenceHigh: number;
-  historicalAvg: number;
-}
-
-export interface DemandForecast {
-  service: string;
-  location: string;
-  predictedJobs: number;
-  demandLevel: DemandLevel;
-  trendPercentage: number;
-  confidence: number;
-  historicalAverage: number;
-  currentWorkforce: number;
-  recommendedWorkforce: number;
-  shortageOrSurplus: number;
-  recommendedAction: string;
-  dailyForecast: DailyForecastPoint[];
-}
-
-export interface ForecastSummaryKPIs {
-  predictedJobs7Days: number;
-  highDemandAreasCount: number;
-  criticalDemandCount: number;
-  urgentAlertsCount: number;
-  topDemandService: string;
-  workforceNeededCount: number;
-  forecastConfidenceAvg: number;
-}
-
-export interface WorkforceRecommendation {
-  id: string;
-  service: string;
-  location: string;
-  expectedDemand: number;
-  currentWorkforce: number;
-  requiredWorkforce: number;
-  shortageOrSurplus: number; // positive = shortage, negative = surplus
-  recommendedAction: string;
-  urgency: 'high' | 'medium' | 'low';
-  affectedCoopZone: string;
-}
-
-export interface AllocationWeights {
-  skillMatch: number;      // e.g. 0.30
-  availability: number;    // e.g. 0.15
-  locationProximity: number; // e.g. 0.15
-  fairnessScore: number;   // e.g. 0.20
-  workloadBalance: number; // e.g. 0.10
-  rating: number;          // e.g. 0.10
-}
-
-export type AllocationStrategy = 'balanced' | 'fairness_priority' | 'location_priority' | 'skill_priority';
-
-export interface ScoreComponentBreakdown {
-  raw: number;           // 0 to 100
-  weight: number;        // weight fraction e.g. 0.30
-  weightedScore: number; // raw * weight (e.g. 30 out of 30)
-  maxPoints: number;     // weight * 100
-}
-
-export interface AllocationCandidate {
-  worker: Worker;
-  totalScore: number; // 0 to 100
-  distanceKm: number;
-  skillScore: ScoreComponentBreakdown;
-  availabilityScore: ScoreComponentBreakdown;
-  locationScore: ScoreComponentBreakdown;
-  fairnessScore: ScoreComponentBreakdown;
-  workloadScore: ScoreComponentBreakdown;
-  ratingScore: ScoreComponentBreakdown;
-  explanation: string[];
-  eligibilityNotes?: string[];
-  isTopRecommendation: boolean;
-}
-
-export interface AllocationResult {
-  jobId: string;
-  job: Job;
-  recommendedWorker: AllocationCandidate | null;
-  candidates: AllocationCandidate[];
-  strategyUsed: AllocationStrategy;
-  weightsUsed: AllocationWeights;
+  message: string;
   timestamp: string;
-  cooperativeContext: {
-    totalEligibleWorkers: number;
-    totalFilteredWorkers: number;
-    averageWeeklyEarnings: number;
-    averageWeeklyJobs: number;
-  };
+  isRead: boolean;
+  type: 'booking' | 'payment' | 'emergency' | 'verification' | 'welfare' | 'system';
+  linkTo?: string;
 }
 
-export interface FairnessMetricStats {
-  opportunityBalanceIndex: number; // e.g. 82%
-  earningsDistributionBalance: number; // e.g. 76%
-  activeWorkersReceivingJobsRatio: number; // e.g. 94%
-  averageWorkerUtilization: number; // e.g. 78%
-  topEarnersSharePercentage: number;
-  bottomEarnersSharePercentage: number;
-  workerDistributionComparison: {
-    workerName: string;
-    workerId: string;
-    beforeJobs: number;
-    afterJobs: number;
-    beforeEarnings: number;
-    afterEarnings: number;
-  }[];
-}
-
-export interface AIInsight {
-  id: string;
-  type: 'trend' | 'workforce' | 'fairness' | 'geo' | 'recommendation';
-  title: string;
-  description: string;
-  metric?: string;
-  badge?: string;
-  iconName: string;
-  timestamp: string;
-}
-
-export * from './demandIntelligence';
+export interface Transaction { id: string; bookingId: string; amount: number; workerPayout: number; cooperativeFee: number; platformFee: number; customerName: string; workerName: string; serviceCategory: ServiceCategory; date: string; createdAt?: string; status: 'Successful' | 'Pending' | 'Failed'; paymentMethod: string; }
