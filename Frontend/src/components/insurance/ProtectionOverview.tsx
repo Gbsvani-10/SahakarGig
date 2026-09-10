@@ -1,190 +1,119 @@
 import React from 'react';
-import { ContributionAmount } from '../../types/insurance';
 import {
-CONTRIBUTION_OPTIONS,
-} from '../../utils/insuranceCalculations';
-import {
-Hospital,
-ShieldAlert,
-Activity,
-HeartHandshake,
-Info,
-Check,
-HelpCircle,
+  ShieldCheck,
+  HeartPulse,
+  Wallet,
+  Users,
 } from 'lucide-react';
+import { ContributionAmount } from '../../types/insurance';
+import { CONTRIBUTION_OPTIONS } from '../../utils/insuranceCalculations';
 
 interface ProtectionOverviewProps {
-selectedContribution: ContributionAmount;
-onOpenSimulator: () => void;
+  selectedContribution: ContributionAmount | null;
 }
 
-const PROTECTION_BENEFITS = [
-{
-id: 'hospital',
-icon: 'Hospital',
-title: 'Hospital Support',
-descriptions: {
-10: 'Basic support for eligible medical and hospitalization needs.',
-20: 'Balanced support for eligible hospitalization and medical expenses.',
-30: 'Enhanced support for eligible hospitalization and medical expenses.',
-},
-illustrativeBenefit: 'Medical assistance',
-},
-{
-id: 'accident',
-icon: 'ShieldAlert',
-title: 'Accident Protection',
-descriptions: {
-10: 'Basic protection for eligible work-related accident situations.',
-20: 'Standard protection for eligible work-related accidents.',
-30: 'Enhanced protection for eligible work-related accidents.',
-},
-illustrativeBenefit: 'Accident assistance',
-},
-{
-id: 'health',
-icon: 'Activity',
-title: 'Health Support',
-descriptions: {
-10: 'Support for eligible everyday health-related needs.',
-20: 'Broader support for eligible health-related needs.',
-30: 'Higher support for eligible health-related needs.',
-},
-illustrativeBenefit: 'Health assistance',
-},
-{
-id: 'family',
-icon: 'HeartHandshake',
-title: 'Family Support',
-descriptions: {
-10: 'Basic assistance for eligible family-related emergencies.',
-20: 'Standard assistance for eligible family-related emergencies.',
-30: 'Enhanced assistance for eligible family-related emergencies.',
-},
-illustrativeBenefit: 'Family assistance',
-},
-] as const;
-
-export const ProtectionOverview: React.FC<ProtectionOverviewProps> = ({
-selectedContribution,
-onOpenSimulator,
+const ProtectionOverview: React.FC<ProtectionOverviewProps> = ({
+  selectedContribution,
 }) => {
-const selectedOption = CONTRIBUTION_OPTIONS.find(
-(option) => option.amount === selectedContribution
-);
+  const selectedOption = CONTRIBUTION_OPTIONS.find(
+    (option) => option.amount === selectedContribution
+  );
 
-const protectionTier = selectedOption?.tier || 'Basic';
+  const protectionTier = selectedOption?.tier || 'Not selected';
 
-const getIcon = (iconName: string) => {
-switch (iconName) {
-case 'Hospital':
-return <Hospital className="w-5 h-5 text-emerald-600" />;
+  const benefits = [
+    {
+      icon: ShieldCheck,
+      title: 'Work Protection',
+      description:
+        'Protection support designed for workers who contribute through the cooperative platform.',
+    },
+    {
+      icon: HeartPulse,
+      title: 'Health Support',
+      description:
+        'Access to eligible health-related support according to the active insurance scheme.',
+    },
+    {
+      icon: Wallet,
+      title: 'Financial Support',
+      description:
+        'Provides financial assistance for eligible situations covered by the selected protection plan.',
+    },
+    {
+      icon: Users,
+      title: 'Community Support',
+      description:
+        'A cooperative-based protection system built around the needs of participating workers.',
+    },
+  ];
 
-```
-  case 'ShieldAlert':
-    return <ShieldAlert className="w-5 h-5 text-amber-600" />;
+  return (
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">
+            Protection Overview
+          </h2>
 
-  case 'Activity':
-    return <Activity className="w-5 h-5 text-blue-600" />;
+          <p className="text-sm text-gray-600 mt-1">
+            Understand the protection and support available through your
+            selected contribution plan.
+          </p>
+        </div>
 
-  case 'HeartHandshake':
-    return <HeartHandshake className="w-5 h-5 text-rose-600" />;
-
-  default:
-    return <Hospital className="w-5 h-5 text-stone-600" />;
-}
-```
-
-};
-
-return ( <section id="protection-overview" className="space-y-4"> <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2"> <div> <div className="flex items-center gap-2"> <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
-What are you protected against? </h2>
-
-```
-        <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold border border-emerald-200">
-          {protectionTier} Plan (₹{selectedContribution}/day)
-        </span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-sm font-semibold text-gray-800">
+          <ShieldCheck size={18} />
+          {protectionTier}
+        </div>
       </div>
 
-      <p className="text-sm text-stone-600">
-        Clear coverage areas designed around everyday medical and occupational hazards.
-      </p>
-    </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {benefits.map((benefit) => {
+          const Icon = benefit.icon;
 
-    <button
-      type="button"
-      id="see-my-protection-btn-top"
-      onClick={onOpenSimulator}
-      className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-emerald-800 hover:text-emerald-900 underline underline-offset-4 cursor-pointer self-start sm:self-auto"
-    >
-      <HelpCircle className="w-4 h-4 text-emerald-700" />
-      <span>See My Protection Simulator</span>
-    </button>
-  </div>
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    {PROTECTION_BENEFITS.map((benefit) => {
-      const currentDesc = benefit.descriptions[selectedContribution];
-
-      return (
-        <div
-          key={benefit.id}
-          id={`protection-card-${benefit.id}`}
-          className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs flex flex-col justify-between hover:border-stone-300 transition-all"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-stone-100/90 flex items-center justify-center">
-                {getIcon(benefit.icon)}
+          return (
+            <div
+              key={benefit.title}
+              className="rounded-xl border border-gray-200 p-5 hover:shadow-sm transition"
+            >
+              <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center mb-4">
+                <Icon size={22} className="text-gray-700" />
               </div>
 
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">
-                Coverage
-              </span>
+              <h3 className="font-semibold text-gray-900">
+                {benefit.title}
+              </h3>
+
+              <p className="text-sm text-gray-600 mt-2 leading-6">
+                {benefit.description}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedOption && (
+        <div className="mt-6 rounded-xl bg-gray-50 border border-gray-200 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium text-gray-700">
+                Selected contribution
+              </p>
+
+              <p className="text-lg font-bold text-gray-900 mt-1">
+                ₹{selectedOption.amount}/day
+              </p>
             </div>
 
-            <h3 className="text-base font-bold text-stone-900 mb-1">
-              {benefit.title}
-            </h3>
-
-            <p className="text-xs text-stone-600 leading-relaxed min-h-[56px]">
-              {currentDesc}
-            </p>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-stone-100">
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-800 font-medium">
-              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="truncate">
-                {benefit.illustrativeBenefit}
-              </span>
+            <div className="text-sm text-gray-600">
+              {selectedOption.description}
             </div>
           </div>
         </div>
-      );
-    })}
-  </div>
-
-  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-xl bg-stone-100/80 border border-stone-200 text-xs text-stone-600">
-    <div className="flex items-start gap-2">
-      <Info className="w-4 h-4 text-stone-500 shrink-0 mt-0.5" />
-
-      <p>
-        Coverage descriptions are indicative. Actual assistance depends on
-        verified documents, eligibility, and registered policy terms.
-      </p>
-    </div>
-
-    <button
-      type="button"
-      onClick={onOpenSimulator}
-      className="shrink-0 px-3 py-1.5 rounded-lg bg-white border border-stone-300 hover:bg-stone-50 text-stone-800 font-medium text-xs shadow-2xs transition-colors cursor-pointer"
-    >
-      Try Simulator →
-    </button>
-  </div>
-</section>
-```
-
-);
+      )}
+    </section>
+  );
 };
+
+export default ProtectionOverview;
