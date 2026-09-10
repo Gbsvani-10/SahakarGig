@@ -12,6 +12,7 @@ import {
 import insuranceApi from '../../services/insuranceApi';
 
 import {
+  ContributionAmount,
   InsuranceWorker,
   InsuranceRecord,
   ContributionHistoryItem,
@@ -38,8 +39,6 @@ import { ClaimSupport } from '../../components/insurance/ClaimSupport';
 import { InsuranceFAQ } from '../../components/insurance/InsuranceFAQ';
 import { IncomeAdjustmentModal } from '../../components/insurance/IncomeAdjustmentModal';
 
-type ContributionAmount = 10 | 20 | 30;
-
 type InsuranceStatus =
   | 'not_enrolled'
   | 'active'
@@ -61,6 +60,7 @@ const getContributionAmount = (
   if (amount === 10) return 10;
   if (amount === 20) return 20;
   if (amount === 30) return 30;
+
   return null;
 };
 
@@ -123,8 +123,8 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
       setLoadError(null);
 
       /*
-       * All worker information comes from the authenticated
-       * SahakarGig backend.
+       * Worker information must come from the
+       * authenticated SahakarGig backend.
        */
       const workerProfile =
         (await insuranceApi.getWorkerProfile()) as InsuranceWorkerData;
@@ -138,8 +138,8 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
       setWorker(workerProfile);
 
       /*
-       * Use recommendation only when real earnings
-       * are available.
+       * Recommendation is calculated only when
+       * verified daily earnings are available.
        */
       const recommended =
         getRecommendedContribution(
@@ -185,7 +185,7 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
 
       /*
        * If the backend already has a contribution,
-       * display that real contribution.
+       * use that actual contribution.
        */
       const existingContribution =
         getContributionAmount(
@@ -235,10 +235,16 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
     );
   }, [worker?.dailyEarnings]);
 
+  /*
+   * Worker is considered enrolled only when the
+   * backend explicitly reports active or pending.
+   *
+   * Merely having an insurance record does not mean
+   * that the worker is enrolled.
+   */
   const isEnrolled =
     insuranceStatus === 'active' ||
-    insuranceStatus === 'pending' ||
-    insuranceRecord !== null;
+    insuranceStatus === 'pending';
 
   /*
    * Confirm insurance enrollment.
@@ -266,8 +272,8 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
       setInsuranceStatus('active');
 
       /*
-       * Use ONLY the reference returned by backend.
-       * Never generate a fake reference on the frontend.
+       * Use only the reference returned by the backend.
+       * Never generate a frontend reference.
        */
       setNewlyEnrolledRef(
         result?.referenceCode ||
@@ -421,6 +427,7 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
 
         <div className="flex items-center gap-2 text-xs text-stone-500 font-medium self-start sm:self-auto">
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
+
           <span>
             SahakarGig Worker Welfare • /insurance
           </span>
@@ -449,6 +456,7 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
       {/* Contribution / protection */}
       <ProtectYourFutureCard
         dailyWage={worker.dailyEarnings}
+        workedDays={worker.estimatedWorkingDays}
         selectedContribution={selectedContribution}
         onSelectContribution={(amount) =>
           setSelectedContribution(amount)
@@ -685,3 +693,17 @@ export const InsurancePage: React.FC<InsurancePageProps> = ({
   );
 };
 ```
+
+**Important changes applied:**
+
+* `ContributionAmount` now comes from `types/insurance.ts`
+* Removed duplicate local `ContributionAmount`
+* `isEnrolled` now depends only on actual backend status
+* `workedDays={worker.estimatedWorkingDays}` added to `ProtectYourFutureCard`
+* No fake earnings
+* No fake working days
+* No generated insurance reference
+* No demo worker data
+* No default `₹300`, `26 days`, etc.
+
+Replace this file and then **`done`** cheppu. Next `insuranceApi.ts` ni backend tho compare chesi correct cheddam.
