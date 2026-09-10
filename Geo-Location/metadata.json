@@ -1,0 +1,6 @@
+{
+  "name": "SahakarGig - Geo-Spatial Worker Matching",
+  "description": "Cooperative Gig Services Platform for Household & Community Services - Intelligent Geo-Spatial Worker Matching (SIH Problem Statement 26089)",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
