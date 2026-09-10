@@ -7,6 +7,15 @@ export interface ContributionOption {
   description: string;
 }
 
+export interface SimulatorScenario {
+  id: string;
+  label: string;
+  tagline: string;
+  explanation: string;
+  coverageNote: string;
+  whatToSubmit: string[];
+}
+
 export const CONTRIBUTION_OPTIONS: ContributionOption[] = [
   {
     amount: 10,
@@ -27,6 +36,65 @@ export const CONTRIBUTION_OPTIONS: ContributionOption[] = [
     description: "Higher protection with broader coverage",
   },
 ];
+
+export const SIMULATOR_SCENARIOS: SimulatorScenario[] = [
+  {
+    id: "Hospitalization",
+    label: "Hospitalization",
+    tagline: "Unexpected hospital care",
+    explanation:
+      "If a covered hospitalization occurs, the worker can submit the required medical documents and claim the eligible support according to the active policy terms.",
+    coverageNote:
+      "Actual eligibility and reimbursement depend on verified documents and the active policy.",
+    whatToSubmit: [
+      "Hospital or discharge document",
+      "Medical bills or receipts",
+      "Identity and policy details",
+    ],
+  },
+  {
+    id: "Accident",
+    label: "Accident",
+    tagline: "Accidental injury",
+    explanation:
+      "For a covered accident, the worker can raise a claim with the relevant medical and incident documents for verification.",
+    coverageNote:
+      "Claim approval depends on policy rules and verification.",
+    whatToSubmit: [
+      "Medical treatment document",
+      "Relevant incident information",
+      "Medical bills or receipts",
+    ],
+  },
+  {
+    id: "Medical Emergency",
+    label: "Medical Emergency",
+    tagline: "Urgent medical treatment",
+    explanation:
+      "A worker can submit a claim for an eligible medical emergency with supporting medical records and receipts.",
+    coverageNote:
+      "Support is subject to the active insurance policy and verification.",
+    whatToSubmit: [
+      "Doctor or hospital document",
+      "Medical receipts",
+      "Policy and identity details",
+    ],
+  },
+];
+
+export function getProtectionLevel(
+  contribution: ContributionAmount | null | undefined
+): string {
+  if (contribution === null || contribution === undefined) {
+    return "Not selected";
+  }
+
+  const option = CONTRIBUTION_OPTIONS.find(
+    (item) => item.amount === contribution
+  );
+
+  return option?.tier ?? "Not selected";
+}
 
 export function getMonthlyContribution(
   dailyContribution: number | null | undefined,
