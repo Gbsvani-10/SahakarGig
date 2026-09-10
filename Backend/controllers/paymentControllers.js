@@ -102,4 +102,55 @@ exports.verifyRazorpayPayment = async (req, res) => {
     }
 };
 
+exports.getWorkerEarnings = async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT
+                i.id,
+                i.booking_id,
+                i.amount,
+                i.payment_method,
+                i.transaction_ref,
+                i.status,
+                i.created_at,
+
+                b.service_type,
+                b.worker_id,
+
+                w.name AS worker_name,
+                u.name AS customer_name
+
+            FROM invoices i
+
+            JOIN bookings b
+                ON b.id = i.booking_id
+
+            JOIN workers w
+                ON w.id = b.worker_id
+
+            LEFT JOIN users u
+                ON u.id = b.customer_id
+
+            WHERE
+                w.user_id = $1
+                AND i.status = 'paid'
+
+            ORDER BY i.created_at DESC
+        `, [req.user.id]);
+
+        res.json({
+            success: true,
+            data: result.rows,
+            timestamp: new Date().toISOString(),
+        });
+
+    } catch (error) {
+        console.error('Failed to fetch worker earnings:', error);
+
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch worker earnings',
+        });
+    }
+};
 exports.completeServicePayment = exports.verifyRazorpayPayment;
