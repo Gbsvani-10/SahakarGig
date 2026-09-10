@@ -121,7 +121,6 @@ try {
 setIsLoading(true);
 setLoadError(null);
 
-```
   const workerProfile =
     (await insuranceApi.getWorkerProfile()) as InsuranceWorkerData;
 
@@ -224,7 +223,6 @@ insuranceStatus === 'pending';
 const handleConfirmEnrollment = async () => {
 if (!worker) return;
 
-```
 if (selectedContribution === null) {
   alert(
     'Please select a valid contribution amount.'
@@ -285,7 +283,6 @@ reason,
 true
 );
 
-```
   setInsuranceRecord(updated);
   setSelectedContribution(newAmount);
 
@@ -316,7 +313,6 @@ true
 if (isLoading) {
 return ( <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-4"> <Loader2 className="w-10 h-10 animate-spin text-emerald-700 mx-auto" />
 
-```
     <h3 className="text-lg font-bold text-stone-800">
       Loading your insurance information...
     </h3>
