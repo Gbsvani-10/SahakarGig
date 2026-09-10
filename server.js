@@ -11,7 +11,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
 app.use(cors({ origin: process.env.FRONTEND_URL || true, credentials: true }));
 app.use(express.json());
 
-const apiRouter = require('./routes/api');
+const apiRouter = require('./api');
 app.use('/api', apiRouter);
 
 const server = http.createServer(app);
