@@ -1,3 +1,4 @@
+```ts
 import {
   WorkerProfile,
   WorkerSkill,
@@ -27,13 +28,17 @@ const mapBackendWorker = (w: any): WorkerProfile => {
     ? w.skills
     : [];
 
-  const certifications: WorkerCertification[] = Array.isArray(w.certifications)
-    ? w.certifications
-    : [];
+  const certifications: WorkerCertification[] =
+    Array.isArray(w.certifications)
+      ? w.certifications
+      : [];
 
-  const schedule: WeeklyScheduleDay[] = Array.isArray(w.schedule)
-    ? w.schedule
-    : [];
+  const schedule: WeeklyScheduleDay[] =
+    Array.isArray(w.schedule)
+      ? w.schedule
+      : [];
+
+  const backendSkill = String(w.skill || '').trim();
 
   return {
     id: w.id,
@@ -43,13 +48,20 @@ const mapBackendWorker = (w: any): WorkerProfile => {
     email: w.email || '',
     avatarUrl: w.avatar_url || '',
 
+    // Preserve the worker's actual registered skill.
+    // Do not replace missing/unknown skills with a fake category.
     primaryCategory:
-      categoryMap[String(w.skill || '').toLowerCase()] || 'Technician',
+      backendSkill
+        ? categoryMap[backendSkill.toLowerCase()] || backendSkill
+        : '',
 
     cooperativeId: w.cooperative_id || '',
     cooperativeName: w.cooperative_name || '',
 
-    rating: Number(w.rating || 0),
+    rating:
+      w.rating == null
+        ? 0
+        : Number(w.rating),
 
     isAvailable: Boolean(w.is_available),
 
@@ -71,40 +83,50 @@ const mapBackendWorker = (w: any): WorkerProfile => {
         ? undefined
         : Number(w.longitude),
 
-    distanceKm: Number(w.distance_km || 0),
+    distanceKm:
+      w.distance_km == null
+        ? 0
+        : Number(w.distance_km),
 
     skills,
     certifications,
     schedule,
 
-    experienceYears: Number(
-      w.experience_years || 0
-    ),
+    experienceYears:
+      w.experience_years == null
+        ? 0
+        : Number(w.experience_years),
 
-    reviewCount: Number(
-      w.review_count || 0
-    ),
+    reviewCount:
+      w.review_count == null
+        ? 0
+        : Number(w.review_count),
 
-    completedJobsCount: Number(
-      w.completed_jobs_count || 0
-    ),
+    completedJobsCount:
+      w.completed_jobs_count == null
+        ? 0
+        : Number(w.completed_jobs_count),
 
-    emergencyAvailable: Boolean(
-      w.emergency_available ?? true
-    ),
+    // Missing emergency information must NOT become true.
+    emergencyAvailable:
+      w.emergency_available == null
+        ? false
+        : Boolean(w.emergency_available),
 
     serviceArea: w.service_area || '',
 
-    hourlyRate: Number(
-      w.hourly_rate || 0
-    ),
+    hourlyRate:
+      w.hourly_rate == null
+        ? 0
+        : Number(w.hourly_rate),
 
     priceRange: w.price_range || '',
 
     welfareStatus: {
-      insuranceActive: Boolean(
-        w.insurance_active
-      ),
+      insuranceActive:
+        w.insurance_active == null
+          ? false
+          : Boolean(w.insurance_active),
 
       policyNumber:
         w.policy_number || '',
@@ -119,7 +141,6 @@ const mapBackendWorker = (w: any): WorkerProfile => {
 };
 
 export const workerService = {
-
   async getAllWorkers(): Promise<WorkerProfile[]> {
     const response = await apiRequest<any[]>(
       '/workers'
@@ -140,8 +161,8 @@ export const workerService = {
     const worker = Array.isArray(response.data)
       ? response.data.find(
           (w: any) =>
-            w.id === id ||
-            w.user_id === id
+            String(w.id) === String(id) ||
+            String(w.user_id) === String(id)
         )
       : undefined;
 
@@ -155,7 +176,8 @@ export const workerService = {
   ): Promise<WorkerProfile[]> {
     return (await this.getAllWorkers()).filter(
       (worker) =>
-        worker.primaryCategory === category
+        worker.primaryCategory.toLowerCase() ===
+        category.toLowerCase()
     );
   },
 
@@ -200,102 +222,5 @@ export const workerService = {
 
   async addCertification(
     _workerId: string,
-    _cert: Omit<
-      WorkerCertification,
-      'id' | 'verificationStatus'
-    >
-  ): Promise<WorkerProfile> {
-    throw new Error(
-      'Worker certification persistence is not implemented by the backend yet'
-    );
-  },
-
-  async updateVerificationStatus(
-    workerId: string,
-    status:
-      | 'Verified'
-      | 'Pending'
-      | 'Suspended'
-  ): Promise<WorkerProfile> {
-
-    if (status !== 'Verified') {
-      throw new Error(
-        'Only verification approval is supported by the backend'
-      );
-    }
-
-    const response = await apiRequest<any>(
-      `/workers/${encodeURIComponent(
-        workerId
-      )}/verify`,
-      {
-        method: 'PATCH',
-      }
-    );
-
-    return mapBackendWorker(response.data);
-  },
-
-  async getNearbyWorkers(
-    query: NearbyServiceSearchQuery
-  ): Promise<{
-    center: {
-      latitude: number;
-      longitude: number;
-    };
-    radiusKm: number;
-    count: number;
-    workers: NearbyWorkerResult[];
-  }> {
-
-    const response = await apiRequest<any>(
-      '/services/nearby',
-      {
-        method: 'POST',
-        body: JSON.stringify(query),
-      }
-    );
-
-    const workers = (
-      response?.data?.workers || []
-    ).map((w: any) => ({
-      worker: mapBackendWorker(w),
-
-      distanceKm: Number(
-        w.distance_km || 0
-      ),
-
-      matchScore: Math.max(
-        0,
-        Math.round(
-          100 -
-            Number(w.distance_km || 0) *
-              5
-        )
-      ),
-    }));
-
-    return {
-      ...response.data,
-      workers,
-    };
-  },
-
-  async updateWorkerLocation(
-    _workerId: string,
-    payload: WorkerLocationUpdatePayload
-  ): Promise<WorkerProfile> {
-
-    const response = await apiRequest<any>(
-      '/workers/location',
-      {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
-      }
-    );
-
-    return mapBackendWorker(
-      response.data
-    );
-  },
-};
+    _cert
+```
