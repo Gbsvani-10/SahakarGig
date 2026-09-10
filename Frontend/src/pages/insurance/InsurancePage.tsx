@@ -219,7 +219,9 @@ const isEnrolled =
 insuranceStatus === 'active' ||
 insuranceStatus === 'pending';
 
-const handleConfirmEnrollment = async () => {
+const handleConfirmEnrollment = async (
+  newAmount:ContributionAmount
+) => {
 if (!worker) return;
 
 if (selectedContribution === null) {
