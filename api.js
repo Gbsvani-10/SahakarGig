@@ -4,12 +4,12 @@ const axios = require('axios');
 const db = require('./Backend/db');
 const authCtrl = require('./Backend/controllers/authControllers');
 const workerCtrl = require('./Backend/controllers/workerControllers');
-const bookingCtrl = require('../controllers/bookingControllers');
-const adminCtrl = require('../controllers/adminControllers');
-const paymentCtrl = require('../controllers/paymentControllers');
-const notificationCtrl = require('../controllers/notificationControllers');
-const aiBridgeCtrl = require('../controllers/aiBridgeController');
-const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
+const bookingCtrl = require('./Backend/controllers/bookingControllers');
+const adminCtrl = require('./Backend/controllers/adminControllers');
+const paymentCtrl = require('./Backend/controllers/paymentControllers');
+const notificationCtrl = require('./Backend/controllers/notificationControllers');
+const aiBridgeCtrl = require('./Backend/controllers/aiBridgeController');
+const { verifyToken, authorizeRoles } = require('./Backend/middleware/authMiddleware');
 
 router.get('/health', (_req, res) => res.json({ success:true, status:'healthy', platform:'SahakarGig Cooperative Platform', database:db.isPostgresConnected()?'PostgreSQL':'Embedded Development DB', timestamp:new Date().toISOString() }));
 router.post('/auth/register',authCtrl.register); router.post('/auth/login',authCtrl.login);
