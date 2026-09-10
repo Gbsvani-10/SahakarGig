@@ -115,7 +115,13 @@ return ( <section className="bg-white rounded-2xl border border-gray-200 shadow-
           {recommendedOption.description}
         </p>
 
-        <button
-          type="button"
-          onClick={() => onApplyRecommendation(recommendedAmount)}
-          className="mt-5 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gray-900 text
+           <button
+      type="button"
+      onClick={() => onApplyRecommendation(recommendedAmount)}
+      className="mt-5 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-colors"
+    >
+      Apply Recommendation
+      <ArrowRight size={18} />
+    </button>
+  </div>
+</div>
