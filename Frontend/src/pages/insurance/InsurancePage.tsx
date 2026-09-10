@@ -372,15 +372,21 @@ return ( <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4"> <di
 
 }
 
-return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 animate-in fade-in duration-200"> <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/80 pb-4">
-{onBackToPortal && ( <button
-         type="button"
-         id="back-to-worker-portal-btn"
-         onClick={onBackToPortal}
-         className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-stone-700 hover:text-stone-950 transition-colors group self-start"
-       > <div className="w-8 h-8 rounded-xl bg-stone-100 group-hover:bg-stone-200 flex items-center justify-center"> <ArrowLeft className="w-4 h-4 text-stone-700" /> </div>
+return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 animate-in fade-in duration-200">
 
 ```
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/80 pb-4">
+    {onBackToPortal && (
+      <button
+        type="button"
+        id="back-to-worker-portal-btn"
+        onClick={onBackToPortal}
+        className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-stone-700 hover:text-stone-950 transition-colors group self-start"
+      >
+        <div className="w-8 h-8 rounded-xl bg-stone-100 group-hover:bg-stone-200 flex items-center justify-center">
+          <ArrowLeft className="w-4 h-4 text-stone-700" />
+        </div>
+
         <span>
           ← Back to Worker Portal
         </span>
@@ -581,17 +587,13 @@ return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 spa
 
   {showSimulatorModal && (
     <ProtectionSimulator
-      onClose={() =>
-        setShowSimulatorModal(false)
-      }
-      dailyEarnings={
-        worker.dailyEarnings
-      }
-      workingDays={
-        worker.estimatedWorkingDays
-      }
+      dailyEarnings={worker.dailyEarnings}
+      workingDays={worker.estimatedWorkingDays}
       selectedContribution={
         selectedContribution
+      }
+      onClose={() =>
+        setShowSimulatorModal(false)
       }
     />
   )}
@@ -610,7 +612,9 @@ return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 spa
     insuranceRecord && (
       <IncomeAdjustmentModal
         currentContribution={
-          selectedContribution
+          getContributionAmount(
+            insuranceRecord.selectedContribution
+          )
         }
         onConfirm={
           handleConfirmAdjustment
