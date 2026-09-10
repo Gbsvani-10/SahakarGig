@@ -9,10 +9,7 @@
     "build": "npm --prefix Frontend run build",
     "start": "node server.js",
     "dev": "npm --prefix Frontend run dev",
-    "backend:dev": "npm --prefix Backend run dev",
-    "insurance:dev": "npm --prefix Insurance run dev",
-    "start": "node server.js",
-    "dev": "npm --prefix Frontend run dev"
+    "backend:dev": "npm --prefix Backend run dev"
   },
   "dependencies": {
     "axios": "^1.7.9",
