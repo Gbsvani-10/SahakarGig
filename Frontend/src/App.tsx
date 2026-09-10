@@ -40,7 +40,6 @@ import { WorkerAvailability } from './pages/worker/WorkerAvailability';
 import { WorkerSkills } from './pages/worker/WorkerSkills';
 import { WorkerCertifications } from './pages/worker/WorkerCertifications';
 import { WorkerEarnings } from './pages/worker/WorkerEarnings';
-import { WorkerWelfare } from './pages/worker/WorkerWelfare';
 import { WorkerRatings } from './pages/worker/WorkerRatings';
 import { WorkerProfile } from './pages/worker/WorkerProfile';
 import { WorkerNotifications } from './pages/worker/WorkerNotifications';
