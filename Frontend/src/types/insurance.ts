@@ -1,4 +1,4 @@
-```ts
+
 export type ContributionAmount = 10 | 20 | 30;
 
 export interface WorkerProfile {
@@ -72,4 +72,3 @@ export interface InsuranceClaim {
 
   createdAt?: string | null;
 }
-```
