@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "sahakargig-backend",
   "version": "1.0.0",
   "description": "Backend service for SahakarGig platform",
@@ -8,7 +8,6 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    ...
     "nodemailer": "^7.0.6",
     "axios": "^1.7.9",
     "bcryptjs": "^3.0.2",
