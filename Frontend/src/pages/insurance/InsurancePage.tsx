@@ -527,13 +527,16 @@ return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 spa
   />
 
   <ContributionSelector
-    selectedContribution={
-      selectedContribution
-    }
-    onSelectContribution={(amount) =>
-      setSelectedContribution(amount)
-    }
-  />
+  selectedAmount={selectedContribution}
+  onSelectAmount={(amount) => setSelectedContribution(amount)}
+  recommendedAmount={
+    recommendedAmount
+      ? getContributionAmount(recommendedAmount.amount)
+      : null
+  }
+  dailyEarnings={worker.dailyEarnings}
+  workingDays={worker.estimatedWorkingDays}
+/>
 
   <ProtectionOverview />
 
