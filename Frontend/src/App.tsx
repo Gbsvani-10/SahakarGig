@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -271,12 +270,7 @@ export default function App() {
                       element={<WorkerEarnings />}
                     />
 
-                    <Route
-                      path="welfare"
-                      element={<WorkerWelfare />}
-                    />
-
-                    {/* Welfare & Insurance */}
+                    {/* Welfare & Insurance → Existing InsurancePage */}
                     <Route
                       path="insurance"
                       element={<InsurancePage />}
@@ -396,4 +390,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
