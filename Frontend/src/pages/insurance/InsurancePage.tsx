@@ -276,11 +276,7 @@ reason: string
 ) => {
 try {
 const updated =
-await insuranceApi.adjustContribution(
-newAmount,
-reason,
-true
-);
+  await insuranceApi.adjustContribution(newAmount);
 
   setInsuranceRecord(updated);
   setSelectedContribution(newAmount);
