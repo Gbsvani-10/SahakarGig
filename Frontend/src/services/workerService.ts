@@ -7,6 +7,7 @@ import {
   NearbyWorkerResult,
   WorkerLocationUpdatePayload,
 } from '../types';
+
 import { apiRequest } from './apiClient';
 
 const categoryMap: Record<string, string> = {
@@ -47,12 +48,9 @@ const mapBackendWorker = (w: any): WorkerProfile => {
     email: w.email || '',
     avatarUrl: w.avatar_url || '',
 
-    // Preserve the worker's actual registered skill.
-    // Do not replace missing/unknown skills with a fake category.
-    primaryCategory:
-      backendSkill
-        ? categoryMap[backendSkill.toLowerCase()] || backendSkill
-        : '',
+    primaryCategory: backendSkill
+      ? categoryMap[backendSkill.toLowerCase()] || backendSkill
+      : '',
 
     cooperativeId: w.cooperative_id || '',
     cooperativeName: w.cooperative_name || '',
@@ -106,7 +104,6 @@ const mapBackendWorker = (w: any): WorkerProfile => {
         ? 0
         : Number(w.completed_jobs_count),
 
-    // Missing emergency information must NOT become true.
     emergencyAvailable:
       w.emergency_available == null
         ? false
@@ -221,4 +218,91 @@ export const workerService = {
 
   async addCertification(
     _workerId: string,
-    _cert
+    _cert: Omit<
+      WorkerCertification,
+      'id' | 'verificationStatus'
+    >
+  ): Promise<WorkerProfile> {
+    throw new Error(
+      'Worker certification persistence is not implemented by the backend yet'
+    );
+  },
+
+  async updateVerificationStatus(
+    workerId: string,
+    status: 'Verified' | 'Pending' | 'Suspended'
+  ): Promise<WorkerProfile> {
+    if (status !== 'Verified') {
+      throw new Error(
+        'Only verification approval is supported by the backend'
+      );
+    }
+
+    const response = await apiRequest<any>(
+      `/workers/${encodeURIComponent(workerId)}/verify`,
+      {
+        method: 'PATCH',
+      }
+    );
+
+    return mapBackendWorker(response.data);
+  },
+
+  async getNearbyWorkers(
+    query: NearbyServiceSearchQuery
+  ): Promise<{
+    center: {
+      latitude: number;
+      longitude: number;
+    };
+    radiusKm: number;
+    count: number;
+    workers: NearbyWorkerResult[];
+  }> {
+    const response = await apiRequest<any>(
+      '/services/nearby',
+      {
+        method: 'POST',
+        body: JSON.stringify(query),
+      }
+    );
+
+    const workers = (
+      response?.data?.workers || []
+    ).map((w: any) => ({
+      worker: mapBackendWorker(w),
+
+      distanceKm: Number(
+        w.distance_km || 0
+      ),
+
+      matchScore: Math.max(
+        0,
+        Math.round(
+          100 -
+            Number(w.distance_km || 0) * 5
+        )
+      ),
+    }));
+
+    return {
+      ...response.data,
+      workers,
+    };
+  },
+
+  async updateWorkerLocation(
+    _workerId: string,
+    payload: WorkerLocationUpdatePayload
+  ): Promise<WorkerProfile> {
+    const response = await apiRequest<any>(
+      '/workers/location',
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }
+    );
+
+    return mapBackendWorker(response.data);
+  },
+};
