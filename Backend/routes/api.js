@@ -10,6 +10,7 @@ const adminCtrl = require('../controllers/adminControllers');
 const paymentCtrl = require('../controllers/paymentControllers');
 const notificationCtrl = require('../controllers/notificationControllers');
 const aiBridgeCtrl = require('../controllers/aiBridgeController');
+const insuranceCtrl = require('../controllers/insuranceControllers');
 
 const {
   verifyToken,
@@ -63,6 +64,58 @@ router.post(
       message: 'Logged out successfully',
     });
   }
+);
+// ============================================================
+// INSURANCE & WELFARE
+// ============================================================
+
+router.get(
+  '/insurance/worker',
+  verifyToken,
+  authorizeRoles('worker'),
+  insuranceCtrl.getWorkerProfile
+);
+
+router.get(
+  '/insurance/record',
+  verifyToken,
+  authorizeRoles('worker'),
+  insuranceCtrl.getInsuranceRecord
+);
+
+router.get(
+  '/insurance/contributions',
+  verifyToken,
+  authorizeRoles('worker'),
+  insuranceCtrl.getContributionHistory
+);
+
+router.post(
+  '/insurance/enroll',
+  verifyToken,
+  authorizeRoles('worker'),
+  insuranceCtrl.enrollInsurance
+);
+
+router.post(
+  '/insurance/adjust',
+  verifyToken,
+  authorizeRoles('worker'),
+  insuranceCtrl.adjustContribution
+);
+
+router.get(
+  '/insurance/claims',
+  verifyToken,
+  authorizeRoles('worker'),
+  insuranceCtrl.getClaims
+);
+
+router.post(
+  '/insurance/claims',
+  verifyToken,
+  authorizeRoles('worker'),
+  insuranceCtrl.createClaim
 );
 
 
