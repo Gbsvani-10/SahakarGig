@@ -1,4 +1,4 @@
-```tsx
+
 import React from 'react';
 import { WorkerProfile } from '../../types/insurance';
 import {
@@ -181,4 +181,3 @@ export const EarningsCard: React.FC<EarningsCardProps> = ({ worker }) => {
     </div>
   );
 };
-```
