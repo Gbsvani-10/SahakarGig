@@ -1,31 +1,156 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
+
 import { ToastContainer } from './components/common/ToastContainer';
+
 import { CustomerLayout } from './layouts/CustomerLayout';
 import { WorkerLayout } from './layouts/WorkerLayout';
 import { AdminLayout } from './layouts/AdminLayout';
-import { SahakarGigPortal } from './pages/portal/SahakarGigPortal'; import { AboutPage } from './pages/public/AboutPage'; import { ServicesCatalogPage } from './pages/public/ServicesCatalogPage'; import { HowItWorksPage } from './pages/public/HowItWorksPage'; import { ContactPage } from './pages/public/ContactPage';
-import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
-import { CustomerDashboard } from './pages/customer/CustomerDashboard'; import { CustomerServices } from './pages/customer/CustomerServices'; import { CustomerWorkers } from './pages/customer/CustomerWorkers'; import { CustomerBookingFlow } from './pages/customer/CustomerBookingFlow'; import { CustomerBookings } from './pages/customer/CustomerBookings'; import { CustomerEmergency } from './pages/customer/CustomerEmergency'; import { CustomerPayments } from './pages/customer/CustomerPayments'; import { CustomerInvoices } from './pages/customer/CustomerInvoices'; import { CustomerRatings } from './pages/customer/CustomerRatings'; import { CustomerProfile } from './pages/customer/CustomerProfile'; import { CustomerSettings } from './pages/customer/CustomerSettings';
-import { WorkerDashboard } from './pages/worker/WorkerDashboard'; import { WorkerActiveJob } from './pages/worker/WorkerActiveJob'; import { WorkerJobs } from './pages/worker/WorkerJobs'; import { WorkerAvailability } from './pages/worker/WorkerAvailability'; import { WorkerSkills } from './pages/worker/WorkerSkills'; import { WorkerCertifications } from './pages/worker/WorkerCertifications'; import { WorkerEarnings } from './pages/worker/WorkerEarnings'; import { WorkerWelfare } from './pages/worker/WorkerWelfare'; import { WorkerRatings } from './pages/worker/WorkerRatings'; import { WorkerProfile } from './pages/worker/WorkerProfile'; import { WorkerNotifications } from './pages/worker/WorkerNotifications'; import { WorkerSettings } from './pages/worker/WorkerSettings';
-import { AdminDashboard } from './pages/admin/AdminDashboard'; import { AdminCooperatives } from './pages/admin/AdminCooperatives'; import { AdminWorkers } from './pages/admin/AdminWorkers'; import { AdminBookings } from './pages/admin/AdminBookings'; import { AdminEmergency } from './pages/admin/AdminEmergency'; import { AdminWelfare } from './pages/admin/AdminWelfare'; import { AdminReports } from './pages/admin/AdminReports'; import { AdminSettings } from './pages/admin/AdminSettings';
 
-function ProtectedRoute({ roles, children }: { roles: string[]; children: React.ReactElement }) {
+import { SahakarGigPortal } from './pages/portal/SahakarGigPortal';
+
+import { AboutPage } from './pages/public/AboutPage';
+import { ServicesCatalogPage } from './pages/public/ServicesCatalogPage';
+import { HowItWorksPage } from './pages/public/HowItWorksPage';
+import { ContactPage } from './pages/public/ContactPage';
+
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+
+import { CustomerDashboard } from './pages/customer/CustomerDashboard';
+import { CustomerServices } from './pages/customer/CustomerServices';
+import { CustomerWorkers } from './pages/customer/CustomerWorkers';
+import { CustomerBookingFlow } from './pages/customer/CustomerBookingFlow';
+import { CustomerBookings } from './pages/customer/CustomerBookings';
+import { CustomerEmergency } from './pages/customer/CustomerEmergency';
+import { CustomerPayments } from './pages/customer/CustomerPayments';
+import { CustomerInvoices } from './pages/customer/CustomerInvoices';
+import { CustomerRatings } from './pages/customer/CustomerRatings';
+import { CustomerProfile } from './pages/customer/CustomerProfile';
+import { CustomerSettings } from './pages/customer/CustomerSettings';
+
+import { WorkerDashboard } from './pages/worker/WorkerDashboard';
+import { WorkerActiveJob } from './pages/worker/WorkerActiveJob';
+import { WorkerJobs } from './pages/worker/WorkerJobs';
+import { WorkerAvailability } from './pages/worker/WorkerAvailability';
+import { WorkerSkills } from './pages/worker/WorkerSkills';
+import { WorkerCertifications } from './pages/worker/WorkerCertifications';
+import { WorkerEarnings } from './pages/worker/WorkerEarnings';
+import { WorkerWelfare } from './pages/worker/WorkerWelfare';
+import { WorkerRatings } from './pages/worker/WorkerRatings';
+import { WorkerProfile } from './pages/worker/WorkerProfile';
+import { WorkerNotifications } from './pages/worker/WorkerNotifications';
+import { WorkerSettings } from './pages/worker/WorkerSettings';
+
+import { InsurancePage } from './pages/insurance/InsurancePage';
+
+import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { AdminCooperatives } from './pages/admin/AdminCooperatives';
+import { AdminWorkers } from './pages/admin/AdminWorkers';
+import { AdminBookings } from './pages/admin/AdminBookings';
+import { AdminEmergency } from './pages/admin/AdminEmergency';
+import { AdminWelfare } from './pages/admin/AdminWelfare';
+import { AdminReports } from './pages/admin/AdminReports';
+import { AdminSettings } from './pages/admin/AdminSettings';
+
+
+function ProtectedRoute({
+  roles,
+  children,
+}: {
+  roles: string[];
+  children: React.ReactElement;
+}) {
   const { user, role, isLoading } = useAuth();
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-sm text-slate-500">Loading SahakarGig…</div>;
-  if (!user || !roles.includes(role)) return <Navigate to="/login" replace />;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-sm text-slate-500">
+        Loading SahakarGig…
+      </div>
+    );
+  }
+
+  if (!user || !roles.includes(role)) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }
 
+
 export default function App() {
-  return <BrowserRouter><LanguageProvider><AuthProvider><AppProvider><div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans antialiased selection:bg-emerald-500 selection:text-white"><div className="flex-1 flex flex-col"><Routes>
-    <Route path="/" element={<SahakarGigPortal/>}/><Route path="/about" element={<AboutPage/>}/><Route path="/services" element={<ServicesCatalogPage/>}/><Route path="/how-it-works" element={<HowItWorksPage/>}/><Route path="/contact" element={<ContactPage/>}/><Route path="/login" element={<Navigate to="/" replace/>}/><Route path="/register" element={<Navigate to="/" replace/>}/><Route path="/forgot-password" element={<ForgotPasswordPage/>}/>
-    <Route path="/customer" element={<ProtectedRoute roles={['customer']}><CustomerLayout/></ProtectedRoute>}><Route index element={<CustomerDashboard/>}/><Route path="dashboard" element={<CustomerDashboard/>}/><Route path="services" element={<CustomerServices/>}/><Route path="workers" element={<CustomerWorkers/>}/><Route path="book" element={<CustomerBookingFlow/>}/><Route path="bookings" element={<CustomerBookings/>}/><Route path="emergency" element={<CustomerEmergency/>}/><Route path="payments" element={<CustomerPayments/>}/><Route path="invoices" element={<CustomerInvoices/>}/><Route path="ratings" element={<CustomerRatings/>}/><Route path="profile" element={<CustomerProfile/>}/><Route path="settings" element={<CustomerSettings/>}/></Route>
-    <Route path="/worker" element={<ProtectedRoute roles={['worker']}><WorkerLayout/></ProtectedRoute>}><Route index element={<WorkerDashboard/>}/><Route path="dashboard" element={<WorkerDashboard/>}/><Route path="active-job" element={<WorkerActiveJob/>}/><Route path="jobs" element={<WorkerJobs/>}/><Route path="availability" element={<WorkerAvailability/>}/><Route path="skills" element={<WorkerSkills/>}/><Route path="certifications" element={<WorkerCertifications/>}/><Route path="earnings" element={<WorkerEarnings/>}/><Route path="welfare" element={<WorkerWelfare/>}/><Route path="ratings" element={<WorkerRatings/>}/><Route path="profile" element={<WorkerProfile/>}/><Route path="notifications" element={<WorkerNotifications/>}/><Route path="settings" element={<WorkerSettings/>}/></Route>
-    <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminLayout/></ProtectedRoute>}><Route index element={<AdminDashboard/>}/><Route path="dashboard" element={<AdminDashboard/>}/><Route path="cooperatives" element={<AdminCooperatives/>}/><Route path="workers" element={<AdminWorkers/>}/><Route path="verification" element={<AdminWorkers/>}/><Route path="skills" element={<AdminWorkers/>}/><Route path="workforce" element={<AdminWorkers/>}/><Route path="bookings" element={<AdminBookings/>}/><Route path="emergency" element={<AdminEmergency/>}/><Route path="payments" element={<AdminReports/>}/><Route path="welfare" element={<AdminWelfare/>}/><Route path="complaints" element={<AdminReports/>}/><Route path="analytics" element={<AdminReports/>}/><Route path="demand-forecast" element={<AdminDashboard/>}/><Route path="reports" element={<AdminReports/>}/><Route path="settings" element={<AdminSettings/>}/></Route>
-    <Route path="*" element={<Navigate to="/" replace/>}/>
-  </Routes></div><ToastContainer/></div></AppProvider></AuthProvider></LanguageProvider></BrowserRouter>;
-}
+  return (
+    <BrowserRouter>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppProvider>
+
+            <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans antialiased selection:bg-emerald-500 selection:text-white">
+
+              <div className="flex-1 flex flex-col">
+
+                <Routes>
+
+                  {/* =========================
+                      PUBLIC / LANDING
+                  ========================== */}
+
+                  <Route
+                    path="/"
+                    element={<SahakarGigPortal />}
+                  />
+
+                  <Route
+                    path="/about"
+                    element={<AboutPage />}
+                  />
+
+                  <Route
+                    path="/services"
+                    element={<ServicesCatalogPage />}
+                  />
+
+                  <Route
+                    path="/how-it-works"
+                    element={<HowItWorksPage />}
+                  />
+
+                  <Route
+                    path="/contact"
+                    element={<ContactPage />}
+                  />
+
+                  <Route
+                    path="/login"
+                    element={<Navigate to="/" replace />}
+                  />
+
+                  <Route
+                    path="/register"
+                    element={<Navigate to="/" replace />}
+                  />
+
+                  <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                  />
+
+
+                  {/* =========================
+                      CUSTOMER
+                  ========================== */}
+
+                  <Route
+                    path="/customer"
+                    element={
+                      <ProtectedRoute roles={['customer']}>
+                        <CustomerLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route
+                     
