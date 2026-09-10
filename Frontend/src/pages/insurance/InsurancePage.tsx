@@ -273,38 +273,37 @@ try {
 };
 
 const handleConfirmAdjustment = async (
-newAmount: ContributionAmount,
-reason: string
+  newAmount: ContributionAmount,
+  reason: string
 ) => {
-try {
-const updated =
-  await insuranceApi.adjustContribution(newAmount);
+  try {
+    const updated =
+      await insuranceApi.adjustContribution(newAmount);
 
-  setInsuranceRecord(updated);
-  setSelectedContribution(newAmount);
+    setInsuranceRecord(updated);
+    setSelectedContribution(newAmount);
 
-  const history =
-    await insuranceApi.getContributionHistory();
+    const history =
+      await insuranceApi.getContributionHistory();
 
-  setContributionHistory(
-    Array.isArray(history)
-      ? history
-      : []
-  );
+    setContributionHistory(
+      Array.isArray(history)
+        ? history
+        : []
+    );
 
-  alert(
-    'Contribution updated to ₹' +
-      newAmount +
-      '/day.'
-  );
-} catch (error: unknown) {
-  throw new Error(
-    error instanceof Error
-      ? error.message
-      : 'Failed to update contribution.'
-  );
-}
-
+    alert(
+      'Contribution updated to ₹' +
+        newAmount +
+        '/day.'
+    );
+  } catch (error: unknown) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : 'Failed to update contribution.'
+    );
+  }
 };
 
 if (isLoading) {
