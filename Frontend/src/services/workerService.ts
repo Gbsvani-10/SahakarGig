@@ -1,4 +1,3 @@
-```ts
 import {
   WorkerProfile,
   WorkerSkill,
@@ -223,4 +222,3 @@ export const workerService = {
   async addCertification(
     _workerId: string,
     _cert
-```
