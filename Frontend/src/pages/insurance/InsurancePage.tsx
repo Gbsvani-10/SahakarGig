@@ -24,9 +24,9 @@ getRecommendedContribution,
 
 import { EarningsCard } from '../../components/insurance/EarningsCard';
 import { ProtectYourFutureCard } from '../../components/insurance/ProtectYourFutureCard';
-import { ContributionSelector } from '../../components/insurance/ContributionSelector';
+import ContributionSelector from '../../components/insurance/ContributionSelector';
 import RecommendationCard from '../../components/insurance/RecommendationCard';
-import { ProtectionOverview } from '../../components/insurance/ProtectionOverview';
+import ProtectionOverview from '../../components/insurance/ProtectionOverview';
 import { ProtectionSimulator } from '../../components/insurance/ProtectionSimulator';
 import { EmergencyShield } from '../../components/insurance/EmergencyShield';
 import { IncomeAwareProtection } from '../../components/insurance/IncomeAwareProtection';
