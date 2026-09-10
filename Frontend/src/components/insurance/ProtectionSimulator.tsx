@@ -55,7 +55,6 @@ return ( <div
 Interactive Tool </span> <span className="text-xs text-stone-400">
 Selected Plan: ₹{selectedContribution}/day ({protectionTier}) </span> </div>
 
-```
         <h2 id="simulator-modal-title" className="text-xl font-bold mt-1 text-white">
           See My Protection Simulator
         </h2>
