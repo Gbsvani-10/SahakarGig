@@ -196,3 +196,50 @@ export function calculateRemainingEarnings(
     dailyEarnings - dailyContribution
   );
 }
+export interface InsuranceFAQItem {
+  question: string;
+  answer: string;
+}
+
+export const INSURANCE_FAQS: InsuranceFAQItem[] = [
+  {
+    question: 'What is SahakarGig worker insurance?',
+    answer:
+      'It is a voluntary protection option designed to help eligible workers receive financial support for covered unexpected events according to the active policy terms.',
+  },
+  {
+    question: 'How much do I contribute?',
+    answer:
+      'You can select a contribution of ₹10, ₹20, or ₹30 per active working day.',
+  },
+  {
+    question: 'Will I have to pay on days when I do not work?',
+    answer:
+      'No. The contribution is designed to be linked to active earning or attendance days. If there is no eligible work or earning for a day, the contribution does not need to be deducted for that day.',
+  },
+  {
+    question: 'Can I change my contribution amount?',
+    answer:
+      'Yes. An active worker can adjust the selected contribution level through the Worker Portal.',
+  },
+  {
+    question: 'What happens if I need to make a claim?',
+    answer:
+      'You can submit a claim through the Worker Portal with the required information and supporting documents. The claim is then subject to verification and the applicable policy terms.',
+  },
+  {
+    question: 'Does insurance guarantee payment for every situation?',
+    answer:
+      'No. Support depends on the active policy, eligibility, submitted documents, verification, and applicable terms and conditions.',
+  },
+  {
+    question: 'How is my monthly contribution estimated?',
+    answer:
+      'The monthly estimate is calculated using the selected daily contribution multiplied by the estimated number of working days in the month.',
+  },
+  {
+    question: 'Can I cancel my insurance?',
+    answer:
+      'The worker can request cancellation or adjustment of the active protection plan through the Worker Portal, subject to the applicable policy rules.',
+  },
+];
