@@ -204,7 +204,6 @@ setLoadError(null);
 } finally {
   setIsLoading(false);
 }
-```
 
 };
 
@@ -271,7 +270,6 @@ try {
 } finally {
   setIsEnrolling(false);
 }
-```
 
 };
 
@@ -312,7 +310,6 @@ true
       : 'Failed to update contribution.'
   );
 }
-```
 
 };
 
@@ -329,14 +326,12 @@ return ( <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-4"> <L
     </p>
   </div>
 );
-```
 
 }
 
 if (loadError || !worker) {
 return ( <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4"> <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center mx-auto"> <AlertCircle className="w-7 h-7" /> </div>
 
-```
     <h3 className="text-xl font-bold text-stone-900">
       Unable to load your insurance information.
     </h3>
@@ -368,13 +363,11 @@ return ( <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4"> <di
     </div>
   </div>
 );
-```
 
 }
 
 return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 animate-in fade-in duration-200">
 
-```
   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/80 pb-4">
     {onBackToPortal && (
       <button
@@ -625,7 +618,6 @@ return ( <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 spa
       />
     )}
 </div>
-```
 
 );
 };
