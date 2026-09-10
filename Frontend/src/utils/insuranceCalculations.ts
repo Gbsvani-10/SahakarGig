@@ -1,5 +1,7 @@
+import { ContributionAmount } from "../types/insurance";
+
 export interface ContributionOption {
-  amount: number;
+  amount: ContributionAmount;
   label: string;
   tier: string;
   description: string;
@@ -27,14 +29,17 @@ export const CONTRIBUTION_OPTIONS: ContributionOption[] = [
 ];
 
 export function getMonthlyContribution(
-  dailyContribution: number,
+  dailyContribution: number | null | undefined,
   workingDays: number | null | undefined
 ): number | null {
   if (
+    dailyContribution === null ||
+    dailyContribution === undefined ||
     !Number.isFinite(dailyContribution) ||
     workingDays === null ||
     workingDays === undefined ||
-    !Number.isFinite(workingDays)
+    !Number.isFinite(workingDays) ||
+    workingDays < 0
   ) {
     return null;
   }
@@ -48,7 +53,8 @@ export function getRecommendedContribution(
   if (
     dailyEarnings === null ||
     dailyEarnings === undefined ||
-    !Number.isFinite(dailyEarnings)
+    !Number.isFinite(dailyEarnings) ||
+    dailyEarnings < 0
   ) {
     return null;
   }
@@ -67,9 +73,36 @@ export function getRecommendedContribution(
 export function formatContribution(
   amount: number | null | undefined
 ): string {
-  if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+  if (
+    amount === null ||
+    amount === undefined ||
+    !Number.isFinite(amount)
+  ) {
     return "Data not available";
   }
 
   return `₹${amount}`;
+}
+
+export function getRecommendationExplanation(
+  dailyEarnings: number | null | undefined,
+  recommendedAmount: ContributionAmount | null
+): string {
+  if (
+    dailyEarnings === null ||
+    dailyEarnings === undefined ||
+    !Number.isFinite(dailyEarnings) ||
+    recommendedAmount === null
+  ) {
+    return "Contribution recommendation is unavailable until verified earnings data is available.";
+  }
+
+  return `Based on your verified daily earnings of ₹${dailyEarnings}, ₹${recommendedAmount}/day is the recommended contribution.`;
+}
+
+export function calculateMonthlyContribution(
+  dailyContribution: ContributionAmount | null,
+  workingDays: number | null | undefined
+): number | null {
+  return getMonthlyContribution(dailyContribution, workingDays);
 }
