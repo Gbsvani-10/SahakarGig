@@ -1,297 +1,284 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { TrendingUp, Scale, Users, Shield, RotateCcw, Briefcase, Bell, AlertTriangle, ChevronRight, X, HelpCircle, Sparkles } from 'lucide-react';
-
-interface UrgentAlertItem {
-  location: string;
-  service: string;
-  predictedJobs: number;
-  demandLevel: string;
-  shortage: number;
-}
+import React from 'react';
+import { 
+  Compass, 
+  AlertCircle, 
+  ShieldCheck, 
+  Languages, 
+  MapPin, 
+  Menu, 
+  X,
+  User,
+  Wrench
+} from 'lucide-react';
+import { AppLanguage, ViewMode } from '../types';
+import { TRANSLATIONS } from '../data/translations';
 
 interface NavbarProps {
-  activeTab: 'demand-forecast' | 'work-allocation' | 'fairness-analytics' | 'workers';
-  setActiveTab: (tab: 'demand-forecast' | 'work-allocation' | 'fairness-analytics' | 'workers') => void;
-  onOpenGuide?: () => void;
-  onResetData: () => void;
-  guideActive?: boolean;
-  urgentAlertCount?: number;
-  urgentAlerts?: UrgentAlertItem[];
+  currentLanguage: AppLanguage;
+  onLanguageChange: (lang: AppLanguage) => void;
+  viewMode: ViewMode;
+  onViewModeToggle: (mode: ViewMode) => void;
+  onOpenEmergency: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  activeTab,
-  setActiveTab,
-  onOpenGuide,
-  onResetData,
-  guideActive = false,
-  urgentAlertCount = 0,
-  urgentAlerts = []
+  currentLanguage,
+  onLanguageChange,
+  viewMode,
+  onViewModeToggle,
+  onOpenEmergency,
 }) => {
-  const [showAlertsDropdown, setShowAlertsDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const t = TRANSLATIONS[currentLanguage];
 
-  // Close dropdown if clicked outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowAlertsDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const languages: { code: AppLanguage; label: string; native: string }[] = [
+    { code: 'en', label: 'English', native: 'English' },
+    { code: 'te', label: 'Telugu', native: 'తెలుగు' },
+    { code: 'hi', label: 'Hindi', native: 'हिंदी' },
+    { code: 'ta', label: 'Tamil', native: 'தமிழ்' },
+    { code: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ' },
+    { code: 'ml', label: 'Malayalam', native: 'മലയാളം' },
+    { code: 'mr', label: 'Marathi', native: 'मराठी' },
+  ];
 
   return (
-    <header className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-purple-100 shadow-xs">
+      {/* Top Cooperative Gov Banner */}
+      <div className="bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-950 text-purple-100 px-4 py-1.5 text-xs">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 bg-purple-800/80 text-purple-200 px-2 py-0.5 rounded font-mono font-medium text-[11px] border border-purple-700/50">
+              SIH Problem #26089
+            </span>
+            <span className="hidden sm:inline text-purple-200/90 font-medium">
+              National Cooperative Gig Services Federation • Ministry of Cooperation
+            </span>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] text-purple-200">
+            <span className="hidden md:inline-flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              100% Certified Cooperative Workers
+            </span>
+            <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Geo-Spatial Grid Live
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Nav */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand & Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center shadow-sm">
-              <Scale className="w-5 h-5 text-white" />
+          {/* Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-purple-500/20 font-bold text-xl border border-purple-400/30">
+              <Compass className="w-6 h-6 text-white" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-lg tracking-tight text-white">SahakarGig</span>
-                <span className="text-2xs font-semibold px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/80">
-                  Cooperative Platform
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 bg-clip-text text-transparent">
+                  SahakarGig
+                </span>
+                <span className="bg-purple-100 text-purple-800 text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border border-purple-200">
+                  Geo-Spatial
                 </span>
               </div>
-              <p className="text-xs text-slate-400 hidden sm:block">
-                Cooperative Gig Platform • AI Demand & Fair Allocation
+              <p className="text-[10px] text-slate-500 font-medium leading-none hidden sm:block">
+                Cooperative Household & Community Gig Services
               </p>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <button
-              onClick={() => setActiveTab('demand-forecast')}
-              className={`px-3.5 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 relative ${
-                activeTab === 'demand-forecast'
-                  ? 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
+          {/* Desktop Nav Links */}
+          <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-slate-600">
+            <a href="#home" className="px-3 py-1.5 rounded-lg hover:text-purple-700 hover:bg-purple-50 transition-colors">
+              Home
+            </a>
+            <a href="#services" className="px-3 py-1.5 rounded-lg hover:text-purple-700 hover:bg-purple-50 transition-colors">
+              Services
+            </a>
+            <a href="#find-workers" className="px-3 py-1.5 rounded-lg hover:text-purple-700 hover:bg-purple-50 transition-colors">
+              Find Workers
+            </a>
+            <a href="#bookings" className="px-3 py-1.5 rounded-lg hover:text-purple-700 hover:bg-purple-50 transition-colors">
+              Bookings
+            </a>
+            <a 
+              href="#map" 
+              className="px-3 py-1.5 rounded-lg bg-purple-700 text-white font-semibold shadow-xs shadow-purple-700/20 flex items-center gap-1.5"
             >
-              <TrendingUp className="w-4 h-4" />
-              <span>AI Demand Intelligence</span>
-              {urgentAlertCount > 0 && (
-                <span className="inline-flex items-center justify-center px-1.5 py-0.2 rounded-full text-2xs font-extrabold bg-rose-600 text-white shadow-xs animate-pulse">
-                  {urgentAlertCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('work-allocation')}
-              className={`px-3.5 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
-                activeTab === 'work-allocation'
-                  ? 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Scale className="w-4 h-4" />
-              <span>Fair Work Allocation</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('fairness-analytics')}
-              className={`px-3.5 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
-                activeTab === 'fairness-analytics'
-                  ? 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              <span>Opportunity Analytics</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('workers')}
-              className={`px-3.5 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
-                activeTab === 'workers'
-                  ? 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Briefcase className="w-4 h-4" />
-              <span>Coop Workers</span>
-            </button>
+              <MapPin className="w-3.5 h-3.5" />
+              Map
+            </a>
           </nav>
 
-          {/* Alerts Notification Badge & Platform Tour Action */}
-          <div className="flex items-center space-x-2.5">
-            {/* Urgent Workforce Notification Bell */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowAlertsDropdown(!showAlertsDropdown)}
-                className={`relative p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer ${
-                  showAlertsDropdown ? 'bg-slate-800 text-white ring-1 ring-slate-700' : ''
-                }`}
-                title="Urgent Demand Alerts"
-                aria-label="View urgent demand notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {urgentAlertCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-4 w-4 bg-rose-600 text-white text-3xs font-extrabold items-center justify-center shadow-xs">
-                      {urgentAlertCount}
-                    </span>
-                  </span>
-                )}
-              </button>
-
-              {/* Notification Popover Dropdown */}
-              {showAlertsDropdown && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-2.5">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-md bg-rose-600/20 text-rose-400 flex items-center justify-center">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="font-bold text-xs text-white">Urgent Demand Alerts</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
-                        {urgentAlertCount} Active
-                      </span>
-                      <button
-                        onClick={() => setShowAlertsDropdown(false)}
-                        className="text-slate-400 hover:text-white p-0.5 rounded cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-2xs text-slate-400 mb-2.5">
-                    Surging job requests require preemptive workforce readiness to avoid cooperative bottlenecks:
-                  </p>
-
-                  <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-                    {urgentAlerts && urgentAlerts.length > 0 ? (
-                      urgentAlerts.map((alert, idx) => (
-                        <div
-                          key={`alert-item-${idx}`}
-                          onClick={() => {
-                            setActiveTab('demand-forecast');
-                            setShowAlertsDropdown(false);
-                          }}
-                          className="p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 cursor-pointer transition-colors group"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-xs text-white group-hover:text-emerald-400 transition-colors">
-                              {alert.service}
-                            </span>
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-2xs font-bold ${
-                                alert.demandLevel === 'Critical'
-                                  ? 'bg-red-600 text-white'
-                                  : 'bg-rose-900 text-rose-200 border border-rose-700'
-                              }`}
-                            >
-                              {alert.demandLevel} Demand
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-2xs text-slate-400 mt-1">
-                            <span>{alert.location.split(' - ')[0]}</span>
-                            <span className="text-rose-400 font-semibold">
-                              {alert.predictedJobs} jobs (+{alert.shortage} workforce deficit)
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-3 text-center text-xs text-slate-400">
-                        No critical shortages currently flagged.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pt-2.5 mt-2.5 border-t border-slate-800 flex items-center justify-between">
-                    <span className="text-3xs text-slate-500">Auto-updated via AI Forecast</span>
-                    <button
-                      onClick={() => {
-                        setActiveTab('demand-forecast');
-                        setShowAlertsDropdown(false);
-                      }}
-                      className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1 cursor-pointer"
-                    >
-                      <span>Open Forecast Dashboard</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+          {/* Right Actions: Language + Role View Selector + Emergency button */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Language Selector */}
+            <div className="relative group">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-medium border border-slate-200 cursor-pointer">
+                <Languages className="w-3.5 h-3.5 text-purple-700" />
+                <span className="font-semibold">{languages.find(l => l.code === currentLanguage)?.native}</span>
+              </div>
+              <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-xl border border-purple-100 py-1 hidden group-hover:block z-50 animate-in fade-in zoom-in-95">
+                <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Select Language
                 </div>
-              )}
+                {languages.map(lang => (
+                  <button
+                    key={lang.code}
+                    onClick={() => onLanguageChange(lang.code)}
+                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-purple-50 transition-colors ${
+                      currentLanguage === lang.code ? 'text-purple-700 font-bold bg-purple-50/70' : 'text-slate-700'
+                    }`}
+                  >
+                    <span>{lang.native}</span>
+                    <span className="text-[11px] text-slate-400">{lang.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {onOpenGuide && (
+            {/* Role View Selector (Customer | Worker | Admin) placed directly beside Emergency */}
+            <div className="flex items-center bg-purple-100/70 p-1 rounded-xl border border-purple-200/80 shadow-2xs">
               <button
-                onClick={onOpenGuide}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-xs cursor-pointer ${
-                  guideActive
-                    ? 'bg-emerald-500 text-slate-950 font-bold ring-2 ring-emerald-300'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                type="button"
+                onClick={() => onViewModeToggle('customer')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'customer'
+                    ? 'bg-purple-900 text-white shadow-xs'
+                    : 'text-purple-900 hover:bg-purple-200/60'
                 }`}
-                title="Interactive walkthrough explaining the cooperative platform workflow"
+                title="View page as Citizen/Customer searching for services"
               >
-                <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden sm:inline">Platform Guide</span>
+                <User className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Customer</span>
               </button>
-            )}
 
+              <button
+                type="button"
+                onClick={() => onViewModeToggle('worker')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'worker'
+                    ? 'bg-purple-900 text-white shadow-xs'
+                    : 'text-purple-900 hover:bg-purple-200/60'
+                }`}
+                title="View page as Cooperative Gig Worker receiving requests"
+              >
+                <Wrench className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Worker</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onViewModeToggle('admin')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'admin'
+                    ? 'bg-purple-900 text-white shadow-xs'
+                    : 'text-purple-900 hover:bg-purple-200/60'
+                }`}
+                title="View page as Federation/Society Admin managing dispatch & territory"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Admin</span>
+              </button>
+            </div>
+
+            {/* Emergency Service Quick Action Button (Kept right beside Role Selector) */}
             <button
-              onClick={onResetData}
-              className="p-1.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Reset or reseed cooperative baseline dataset"
+              onClick={onOpenEmergency}
+              className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow-sm shadow-rose-600/30 flex items-center gap-1.5 transition-transform active:scale-95"
             >
-              <RotateCcw className="w-4 h-4" />
+              <AlertCircle className="w-3.5 h-3.5 animate-bounce" />
+              <span className="hidden sm:inline">Emergency SOS</span>
+            </button>
+
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-purple-800 hover:bg-purple-50"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation Tab Strip */}
-        <div className="flex md:hidden overflow-x-auto py-2 space-x-1 border-t border-slate-800 items-center">
-          <button
-            onClick={() => setActiveTab('demand-forecast')}
-            className={`px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap flex items-center space-x-1.5 ${
-              activeTab === 'demand-forecast' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400'
-            }`}
-          >
-            <span>Demand Forecast</span>
-            {urgentAlertCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-rose-600 text-white animate-pulse">
-                {urgentAlertCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('work-allocation')}
-            className={`px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap ${
-              activeTab === 'work-allocation' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400'
-            }`}
-          >
-            Fair Allocation
-          </button>
-          <button
-            onClick={() => setActiveTab('fairness-analytics')}
-            className={`px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap ${
-              activeTab === 'fairness-analytics' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400'
-            }`}
-          >
-            Opportunity Analytics
-          </button>
-          <button
-            onClick={() => setActiveTab('workers')}
-            className={`px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap ${
-              activeTab === 'workers' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400'
-            }`}
-          >
-            Workers
-          </button>
-        </div>
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden py-3 border-t border-purple-100 space-y-2">
+            {/* Mobile Role Switcher */}
+            <div className="p-2.5 bg-purple-50 rounded-xl space-y-1.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-purple-900">
+                Switch Perspective
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  onClick={() => {
+                    onViewModeToggle('customer');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`py-1.5 px-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 ${
+                    viewMode === 'customer' ? 'bg-purple-900 text-white' : 'bg-white text-purple-900'
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Customer</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onViewModeToggle('worker');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`py-1.5 px-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 ${
+                    viewMode === 'worker' ? 'bg-purple-900 text-white' : 'bg-white text-purple-900'
+                  }`}
+                >
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span>Worker</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onViewModeToggle('admin');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`py-1.5 px-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 ${
+                    viewMode === 'admin' ? 'bg-purple-900 text-white' : 'bg-white text-purple-900'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                </button>
+              </div>
+            </div>
+
+            <a href="#home" className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-purple-50">
+              Home
+            </a>
+            <a href="#services" className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-purple-50">
+              Services
+            </a>
+            <a href="#find-workers" className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-purple-50">
+              Find Workers
+            </a>
+            <a href="#bookings" className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-purple-50">
+              Bookings
+            </a>
+            <a href="#map" className="block px-3 py-2 rounded-md text-sm font-semibold text-purple-800 bg-purple-100">
+              Map (Geo-Spatial Matching)
+            </a>
+            <button
+              onClick={() => {
+                onOpenEmergency();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 rounded-md text-sm font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 text-rose-500" />
+              Request Emergency Worker
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -1,97 +1,33 @@
-import React, { useState } from 'react';
-import { BookingData, Language } from './types';
-import { PaymentPage } from './components/PaymentPage';
-import { Dashboard } from './components/Dashboard';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppProvider } from './context/AppContext';
+import { DemoBanner } from './components/common/DemoBanner';
+import { ToastContainer } from './components/common/ToastContainer';
+import { PublicLayout } from './layouts/PublicLayout';
+import { CustomerLayout } from './layouts/CustomerLayout';
+import { WorkerLayout } from './layouts/WorkerLayout';
+import { AdminLayout } from './layouts/AdminLayout';
+import { LandingPage } from './pages/public/LandingPage'; import { AboutPage } from './pages/public/AboutPage'; import { ServicesCatalogPage } from './pages/public/ServicesCatalogPage'; import { HowItWorksPage } from './pages/public/HowItWorksPage'; import { ContactPage } from './pages/public/ContactPage';
+import { LoginPage } from './pages/auth/LoginPage'; import { RegisterPage } from './pages/auth/RegisterPage'; import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { CustomerDashboard } from './pages/customer/CustomerDashboard'; import { CustomerServices } from './pages/customer/CustomerServices'; import { CustomerWorkers } from './pages/customer/CustomerWorkers'; import { CustomerBookingFlow } from './pages/customer/CustomerBookingFlow'; import { CustomerBookings } from './pages/customer/CustomerBookings'; import { CustomerEmergency } from './pages/customer/CustomerEmergency'; import { CustomerPayments } from './pages/customer/CustomerPayments'; import { CustomerInvoices } from './pages/customer/CustomerInvoices'; import { CustomerRatings } from './pages/customer/CustomerRatings'; import { CustomerProfile } from './pages/customer/CustomerProfile'; import { CustomerSettings } from './pages/customer/CustomerSettings';
+import { WorkerDashboard } from './pages/worker/WorkerDashboard'; import { WorkerActiveJob } from './pages/worker/WorkerActiveJob'; import { WorkerJobs } from './pages/worker/WorkerJobs'; import { WorkerAvailability } from './pages/worker/WorkerAvailability'; import { WorkerSkills } from './pages/worker/WorkerSkills'; import { WorkerCertifications } from './pages/worker/WorkerCertifications'; import { WorkerEarnings } from './pages/worker/WorkerEarnings'; import { WorkerWelfare } from './pages/worker/WorkerWelfare'; import { WorkerRatings } from './pages/worker/WorkerRatings'; import { WorkerProfile } from './pages/worker/WorkerProfile'; import { WorkerNotifications } from './pages/worker/WorkerNotifications'; import { WorkerSettings } from './pages/worker/WorkerSettings';
+import { AdminDashboard } from './pages/admin/AdminDashboard'; import { AdminCooperatives } from './pages/admin/AdminCooperatives'; import { AdminWorkers } from './pages/admin/AdminWorkers'; import { AdminBookings } from './pages/admin/AdminBookings'; import { AdminEmergency } from './pages/admin/AdminEmergency'; import { AdminWelfare } from './pages/admin/AdminWelfare'; import { AdminReports } from './pages/admin/AdminReports'; import { AdminSettings } from './pages/admin/AdminSettings';
 
-// Sample demo bookings satisfying requirements
-const initialBookings: BookingData[] = [
-  {
-    id: 'SG10245',
-    workerName: 'Ravi Kumar',
-    workerPhone: '+91 98765 43210',
-    workerUpiId: 'ravi.kumar@upi',
-    service: 'Plumbing',
-    serviceCategory: 'Home Maintenance',
-    scheduledDate: '10 September 2026',
-    scheduledTime: '10:00 AM',
-    customerName: 'Aarav Sharma',
-    customerPhone: '+91 98123 45678',
-    customerAddress: 'Flat 402, Green Meadows, Hyderabad',
-    baseServiceAmount: 1000,
-    gstRate: 0.18,
-    adminFee: 50,
-    paymentStatus: 'pending',
-  },
-  {
-    id: 'SG10246',
-    workerName: 'Suresh Rao',
-    workerPhone: '+91 98765 12345',
-    workerUpiId: 'suresh.rao@upi',
-    service: 'Electrical Repair',
-    serviceCategory: 'Electrical',
-    scheduledDate: '11 September 2026',
-    scheduledTime: '02:30 PM',
-    customerName: 'Aarav Sharma',
-    customerPhone: '+91 98123 45678',
-    customerAddress: 'Flat 402, Green Meadows, Hyderabad',
-    baseServiceAmount: 850,
-    gstRate: 0.18,
-    adminFee: 50,
-    paymentStatus: 'pending',
-  },
-];
+function ProtectedRoute({ roles, children }: { roles: string[]; children: React.ReactElement }) {
+  const { user, role, isLoading } = useAuth();
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-sm text-slate-500">Loading SahakarGig…</div>;
+  if (!user || !roles.includes(role)) return <Navigate to="/login" replace />;
+  return children;
+}
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'payment'>('payment'); // Default to payment page so reviewer sees it immediately
-  const [language, setLanguage] = useState<Language>('en');
-  const [bookings, setBookings] = useState<BookingData[]>(initialBookings);
-  const [selectedBookingId, setSelectedBookingId] = useState<string>('SG10245');
-
-  const selectedBooking =
-    bookings.find((b) => b.id === selectedBookingId) || bookings[0];
-
-  const handlePaymentSuccess = (bookingId: string, transactionId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              paymentStatus: 'paid',
-              paidAt: new Date().toLocaleDateString('en-IN', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              }),
-              transactionId,
-              paymentMethod: 'UPI App',
-            }
-          : b
-      )
-    );
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 antialiased selection:bg-emerald-200 selection:text-emerald-900">
-      {currentView === 'payment' ? (
-        <PaymentPage
-          booking={selectedBooking}
-          language={language}
-          onLanguageChange={setLanguage}
-          onBackToDashboard={() => setCurrentView('dashboard')}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
-      ) : (
-        <Dashboard
-          bookings={bookings}
-          selectedBookingId={selectedBookingId}
-          onSelectBooking={(id) => setSelectedBookingId(id)}
-          onOpenPayments={() => setCurrentView('payment')}
-          language={language}
-          onLanguageChange={setLanguage}
-        />
-      )}
-    </div>
-  );
+  return <BrowserRouter><LanguageProvider><AuthProvider><AppProvider><div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans antialiased selection:bg-emerald-500 selection:text-white"><DemoBanner/><div className="flex-1 flex flex-col"><Routes>
+    <Route element={<PublicLayout />}><Route path="/" element={<LandingPage/>}/><Route path="/about" element={<AboutPage/>}/><Route path="/services" element={<ServicesCatalogPage/>}/><Route path="/how-it-works" element={<HowItWorksPage/>}/><Route path="/contact" element={<ContactPage/>}/><Route path="/login" element={<LoginPage/>}/><Route path="/register" element={<RegisterPage/>}/><Route path="/forgot-password" element={<ForgotPasswordPage/>}/></Route>
+    <Route path="/customer" element={<ProtectedRoute roles={['customer']}><CustomerLayout/></ProtectedRoute>}><Route index element={<CustomerDashboard/>}/><Route path="dashboard" element={<CustomerDashboard/>}/><Route path="services" element={<CustomerServices/>}/><Route path="workers" element={<CustomerWorkers/>}/><Route path="book" element={<CustomerBookingFlow/>}/><Route path="bookings" element={<CustomerBookings/>}/><Route path="emergency" element={<CustomerEmergency/>}/><Route path="payments" element={<CustomerPayments/>}/><Route path="invoices" element={<CustomerInvoices/>}/><Route path="ratings" element={<CustomerRatings/>}/><Route path="profile" element={<CustomerProfile/>}/><Route path="settings" element={<CustomerSettings/>}/></Route>
+    <Route path="/worker" element={<ProtectedRoute roles={['worker']}><WorkerLayout/></ProtectedRoute>}><Route index element={<WorkerDashboard/>}/><Route path="dashboard" element={<WorkerDashboard/>}/><Route path="active-job" element={<WorkerActiveJob/>}/><Route path="jobs" element={<WorkerJobs/>}/><Route path="availability" element={<WorkerAvailability/>}/><Route path="skills" element={<WorkerSkills/>}/><Route path="certifications" element={<WorkerCertifications/>}/><Route path="earnings" element={<WorkerEarnings/>}/><Route path="welfare" element={<WorkerWelfare/>}/><Route path="ratings" element={<WorkerRatings/>}/><Route path="profile" element={<WorkerProfile/>}/><Route path="notifications" element={<WorkerNotifications/>}/><Route path="settings" element={<WorkerSettings/>}/></Route>
+    <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminLayout/></ProtectedRoute>}><Route index element={<AdminDashboard/>}/><Route path="dashboard" element={<AdminDashboard/>}/><Route path="cooperatives" element={<AdminCooperatives/>}/><Route path="workers" element={<AdminWorkers/>}/><Route path="verification" element={<AdminWorkers/>}/><Route path="skills" element={<AdminWorkers/>}/><Route path="workforce" element={<AdminWorkers/>}/><Route path="bookings" element={<AdminBookings/>}/><Route path="emergency" element={<AdminEmergency/>}/><Route path="payments" element={<AdminReports/>}/><Route path="welfare" element={<AdminWelfare/>}/><Route path="complaints" element={<AdminReports/>}/><Route path="analytics" element={<AdminReports/>}/><Route path="demand-forecast" element={<AdminDashboard/>}/><Route path="reports" element={<AdminReports/>}/><Route path="settings" element={<AdminSettings/>}/></Route>
+    <Route path="*" element={<Navigate to="/" replace/>}/>
+  </Routes></div><ToastContainer/></div></AppProvider></AuthProvider></LanguageProvider></BrowserRouter>;
 }
