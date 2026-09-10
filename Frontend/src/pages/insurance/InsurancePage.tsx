@@ -32,7 +32,7 @@ import { EmergencyShield } from '../../components/insurance/EmergencyShield';
 import { IncomeAwareProtection } from '../../components/insurance/IncomeAwareProtection';
 import { InsuranceSummary } from '../../components/insurance/InsuranceSummary';
 import { ConfirmationScreen } from '../../components/insurance/ConfirmationScreen';
-import { ActiveInsuranceDashboard } from '../../components/insurance/ActiveInsuranceDashboard';
+import ActiveInsuranceDashboard from '../../components/insurance/ActiveInsuranceDashboard';
 import { ContributionHistory } from '../../components/insurance/ContributionHistory';
 import { ClaimSupport } from '../../components/insurance/ClaimSupport';
 import { InsuranceFAQ } from '../../components/insurance/InsuranceFAQ';
