@@ -86,7 +86,7 @@ export const WorkerLayout: React.FC = () => {
     },
     {
       label: 'Welfare & Insurance',
-      path: '/insurance',
+      path: '/worker/insurance',
       icon: <HeartPulse className="w-4 h-4" />,
     },
     {
@@ -125,6 +125,7 @@ export const WorkerLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+
       {/* Mobile Header */}
       <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <button
@@ -136,7 +137,9 @@ export const WorkerLayout: React.FC = () => {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="font-bold text-slate-900">SahakarGig</div>
+        <div className="font-bold text-slate-900">
+          SahakarGig
+        </div>
 
         <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">
           {currentWorker?.fullName?.charAt(0)?.toUpperCase() ||
@@ -164,6 +167,7 @@ export const WorkerLayout: React.FC = () => {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
+
         {/* Sidebar Header */}
         <div className="h-16 px-5 border-b border-slate-200 flex items-center justify-between">
           <button
@@ -187,6 +191,7 @@ export const WorkerLayout: React.FC = () => {
         {/* Current Worker */}
         <div className="px-4 py-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
+
             <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
               {currentWorker?.fullName?.charAt(0)?.toUpperCase() ||
                 user?.name?.charAt(0)?.toUpperCase() ||
@@ -202,6 +207,7 @@ export const WorkerLayout: React.FC = () => {
                 {currentWorker?.cooperativeName || 'Worker Account'}
               </p>
             </div>
+
           </div>
 
           {currentWorker && (
@@ -246,12 +252,14 @@ export const WorkerLayout: React.FC = () => {
             <span>Logout</span>
           </button>
         </div>
+
       </aside>
 
       {/* Main Content */}
       <main className="lg:ml-72 min-h-screen">
         <Outlet />
       </main>
+
     </div>
   );
 };
