@@ -1,66 +1,42 @@
-```tsx
-import React, { useState } from 'react';
-import {
-  Outlet,
-  Link,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
-
-import { useAuth } from '../context/AuthContext';
-import { useApp } from '../context/AppContext';
-import { ToastContainer } from '../components/common/ToastContainer';
-
+import React, { useMemo } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Briefcase,
+  Activity,
   User,
   Wrench,
   Award,
-  Clock,
-  Briefcase,
-  PlayCircle,
-  IndianRupee,
+  CalendarDays,
+  Wallet,
   Star,
   HeartPulse,
   Bell,
   Settings,
   LogOut,
-  Building2,
   Menu,
   X,
-  Radio,
-  ChevronRight,
 } from 'lucide-react';
+
+import { useAuth } from '../context/AuthContext';
+import { useApp } from '../context/AppContext';
 
 export const WorkerLayout: React.FC = () => {
   const { user, logout } = useAuth();
+  const { workers } = useApp();
 
-  const {
-    workers,
-    updateWorkerAvailability,
-    unreadNotificationCount,
-  } = useApp();
-
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  /*
-   * Find ONLY the worker belonging to the
-   * currently authenticated account.
-   *
-   * No workers[0]
-   * No hardcoded worker
-   * No demo worker
-   */
-  const currentWorker = workers.find(
-    (worker) =>
-      String(worker.userId) === String(user?.id)
-  );
+  const currentWorker = useMemo(() => {
+    if (!user?.id) return null;
 
-  const activeStatus =
-    currentWorker?.availabilityStatus || 'Offline';
+    return workers.find(
+      (worker) => String(worker.userId) === String(user.id)
+    );
+  }, [workers, user?.id]);
 
   const navItems = [
     {
@@ -72,12 +48,11 @@ export const WorkerLayout: React.FC = () => {
       label: 'Job Requests',
       path: '/worker/jobs',
       icon: <Briefcase className="w-4 h-4" />,
-      highlight: true,
     },
     {
       label: 'Active Job Screen',
       path: '/worker/active-job',
-      icon: <PlayCircle className="w-4 h-4" />,
+      icon: <Activity className="w-4 h-4" />,
     },
     {
       label: 'My Profile',
@@ -97,35 +72,27 @@ export const WorkerLayout: React.FC = () => {
     {
       label: 'Availability Schedule',
       path: '/worker/availability',
-      icon: <Clock className="w-4 h-4" />,
+      icon: <CalendarDays className="w-4 h-4" />,
     },
     {
       label: 'Earnings & Payouts',
       path: '/worker/earnings',
-      icon: <IndianRupee className="w-4 h-4" />,
+      icon: <Wallet className="w-4 h-4" />,
     },
     {
       label: 'Customer Ratings',
       path: '/worker/ratings',
       icon: <Star className="w-4 h-4" />,
     },
-
-    /*
-     * STEP 1 CHANGE:
-     * Welfare & Insurance now opens the
-     * integrated Insurance page.
-     */
     {
       label: 'Welfare & Insurance',
       path: '/insurance',
       icon: <HeartPulse className="w-4 h-4" />,
     },
-
     {
       label: 'Notifications',
       path: '/worker/notifications',
       icon: <Bell className="w-4 h-4" />,
-      badge: unreadNotificationCount,
     },
     {
       label: 'Settings',
@@ -134,266 +101,157 @@ export const WorkerLayout: React.FC = () => {
     },
   ];
 
-  const handleStatusToggle = (
-    newStatus: 'Available' | 'Busy' | 'Offline'
-  ) => {
-    if (!currentWorker) return;
+  const isActive = (path: string) => {
+    if (path === '/worker/dashboard') {
+      return (
+        location.pathname === '/worker' ||
+        location.pathname === '/worker/' ||
+        location.pathname === '/worker/dashboard'
+      );
+    }
 
-    updateWorkerAvailability(
-      currentWorker.id,
-      newStatus
-    );
+    return location.pathname === path;
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setSidebarOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="flex-1 flex overflow-hidden">
-
-        {/* Mobile Backdrop */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-gray-900/60 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Sidebar */}
-        <aside
-          className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-200 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${
-            sidebarOpen
-              ? 'translate-x-0'
-              : '-translate-x-full lg:translate-x-0'
-          }`}
+    <div className="min-h-screen bg-slate-50">
+      {/* Mobile Header */}
+      <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-lg hover:bg-slate-100"
+          aria-label="Open worker menu"
         >
+          <Menu className="w-5 h-5" />
+        </button>
 
-          {/* Header */}
-          <div className="h-16 px-5 flex items-center justify-between border-b border-slate-800">
+        <div className="font-bold text-slate-900">SahakarGig</div>
 
-            <Link
-              to="/worker/dashboard"
-              className="flex items-center gap-2.5"
-            >
-              <div className="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center">
-                <Wrench className="w-4 h-4" />
-              </div>
-
-              <div>
-                <span className="font-bold text-white text-base">
-                  SahakarGig
-                </span>
-
-                <span className="block text-[10px] text-teal-400 font-semibold uppercase">
-                  Artisan Worker Portal
-                </span>
-              </div>
-            </Link>
-
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-slate-400 hover:text-white p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-          </div>
-
-          {/* Duty Status */}
-          <div className="p-3 mx-3 my-2.5 rounded-xl bg-slate-800 border border-slate-700">
-
-            <div className="flex items-center justify-between mb-2">
-
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Duty Status
-              </span>
-
-              <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400">
-                <Radio className="w-3 h-3" />
-                {activeStatus}
-              </span>
-
-            </div>
-
-            <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-lg text-center">
-
-              {(
-                ['Available', 'Busy', 'Offline'] as const
-              ).map((status) => (
-
-                <button
-                  key={status}
-                  onClick={() =>
-                    handleStatusToggle(status)
-                  }
-                  disabled={!currentWorker}
-                  className={`py-1 text-[10px] font-bold rounded transition-colors ${
-                    activeStatus === status
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-slate-400 hover:text-white'
-                  } disabled:opacity-50`}
-                >
-                  {status === 'Available'
-                    ? 'Online'
-                    : status}
-                </button>
-
-              ))}
-
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto">
-
-            {navItems.map((item) => {
-
-              const isActive =
-                location.pathname === item.path;
-
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() =>
-                    setSidebarOpen(false)
-                  }
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-teal-700 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-
-                  <div className="flex items-center gap-3">
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </div>
-
-                  {item.badge ? (
-                    <span className="min-w-5 h-5 px-1 rounded-full bg-amber-400 text-slate-900 text-[10px] flex items-center justify-center">
-                      {item.badge}
-                    </span>
-                  ) : item.highlight ? (
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                  ) : null}
-
-                </Link>
-              );
-            })}
-
-          </nav>
-
-          {/* Logged-in Worker Information */}
-          <div className="p-4 border-t border-slate-800 bg-slate-950">
-
-            <div className="flex items-center gap-3 mb-3">
-
-              <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center text-white">
-                <User className="w-4 h-4" />
-              </div>
-
-              <div className="overflow-hidden">
-
-                <p className="text-xs font-bold text-white truncate">
-                  {currentWorker?.name || user?.name || 'Worker'}
-                </p>
-
-                <p className="text-[10px] text-teal-400 truncate font-medium">
-                  {currentWorker?.primaryCategory || 'Worker'}
-                  {currentWorker
-                    ? ` • ⭐ ${currentWorker.rating}`
-                    : ''}
-                </p>
-
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-semibold text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 hover:text-white"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
-            </button>
-
-          </div>
-
-        </aside>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-          {/* Topbar */}
-          <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 z-20">
-
-            <div className="flex items-center gap-3">
-
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-
-              <div className="text-xs text-gray-500 hidden sm:flex items-center gap-1.5">
-
-                <span>SahakarGig Worker</span>
-
-                <ChevronRight className="w-3 h-3 text-gray-400" />
-
-                <span className="font-semibold text-gray-800 capitalize">
-                  {location.pathname
-                    .split('/')[2]
-                    ?.replace('-', ' ') ||
-                    'Dashboard'}
-                </span>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-center gap-3">
-
-              {currentWorker?.cooperativeId && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-200 text-xs font-semibold">
-
-                  <Building2 className="w-3.5 h-3.5" />
-
-                  <span>Coop ID:</span>
-
-                  <span className="font-mono text-[11px]">
-                    {currentWorker.cooperativeId}
-                  </span>
-
-                </div>
-              )}
-
-              <Link
-                to="/worker/active-job"
-                className="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5"
-              >
-                <PlayCircle className="w-3.5 h-3.5" />
-                <span>Active Job Step Tracker</span>
-              </Link>
-
-            </div>
-
-          </header>
-
-          {/* Dashboard Pages */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <Outlet />
-          </main>
-
+        <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">
+          {currentWorker?.fullName?.charAt(0)?.toUpperCase() ||
+            user?.name?.charAt(0)?.toUpperCase() ||
+            'W'}
         </div>
       </div>
 
-      <ToastContainer />
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close worker menu"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed top-0 left-0 z-50 h-screen w-72 bg-white border-r border-slate-200
+          flex flex-col transition-transform duration-200
+          lg:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        {/* Sidebar Header */}
+        <div className="h-16 px-5 border-b border-slate-200 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => handleNavigation('/worker/dashboard')}
+            className="font-black text-lg text-slate-900"
+          >
+            Sahakar<span className="text-emerald-700">Gig</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Current Worker */}
+        <div className="px-4 py-4 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+              {currentWorker?.fullName?.charAt(0)?.toUpperCase() ||
+                user?.name?.charAt(0)?.toUpperCase() ||
+                'W'}
+            </div>
+
+            <div className="min-w-0">
+              <p className="font-semibold text-sm text-slate-900 truncate">
+                {currentWorker?.fullName || user?.name || 'Worker'}
+              </p>
+
+              <p className="text-xs text-slate-500 truncate">
+                {currentWorker?.cooperativeName || 'Worker Account'}
+              </p>
+            </div>
+          </div>
+
+          {currentWorker && (
+            <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Account connected
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              type="button"
+              onClick={() => handleNavigation(item.path)}
+              className={`
+                w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+                text-sm font-medium transition-colors text-left
+                ${
+                  isActive(item.path)
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }
+              `}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-3 border-t border-slate-200">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="lg:ml-72 min-h-screen">
+        <Outlet />
+      </main>
     </div>
   );
 };
-```
