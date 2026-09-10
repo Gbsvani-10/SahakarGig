@@ -174,3 +174,25 @@ export function calculateMonthlyContribution(
 ): number | null {
   return getMonthlyContribution(dailyContribution, workingDays);
 }
+export const DEFAULT_WORKING_DAYS_PER_MONTH = 26;
+
+export function calculateRemainingEarnings(
+  dailyEarnings: number | null | undefined,
+  dailyContribution: ContributionAmount | null | undefined
+): number | null {
+  if (
+    dailyEarnings === null ||
+    dailyEarnings === undefined ||
+    !Number.isFinite(dailyEarnings) ||
+    dailyContribution === null ||
+    dailyContribution === undefined ||
+    !Number.isFinite(dailyContribution)
+  ) {
+    return null;
+  }
+
+  return Math.max(
+    0,
+    dailyEarnings - dailyContribution
+  );
+}
